@@ -1,0 +1,6 @@
+temperatura;ocupacion;consumo_energia;eficiencia_energetica;porcentaje_renovable;tipo_instalacion
+22;5;120;0.85;40;Residencial
+28;3;150;0.80;60;Comercial
+18;10;200;0.90;30;Industrial
+25;2;90;0.75;70;Residencial
+30;8;250;0.70;20;Industrial

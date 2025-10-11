@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - ODS 7{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Título principal -->
+    <div class="text-center mb-5">
+        <h1 class="border bg-success bg-opacity-75 text-white p-4 rounded-4 shadow">
+            <i class="bi bi-lightbulb"></i> <strong>Machine Learning para Energía Sostenible (ODS 7)</strong>
+        </h1>
+        <p class="lead mt-3 text-dark" style="text-align: justify;">
+            El <strong>Machine Learning</strong> impulsa la <strong>ODS 7: Energía asequible y no contaminante</strong> mediante la predicción, optimización y análisis de datos energéticos, promoviendo el acceso universal a energía sostenible y eficiente.
+        </p>
+        <!-- Botón de acceso a Entendimiento del Negocio y los Datos -->
+        <a href="{{ url_for('entendimiento') }}" class="btn btn-outline-success btn-lg mt-3 shadow">
+            <i class="bi bi-search"></i> Entendimiento del Negocio y los Datos
+        </a>
+    </div>
+    <div class="row g-4">
+        <!-- Tarjeta de Regresión Lineal -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #e0ffe0 0%, #b2f7ef 100%);">
+                <div class="card-header bg-primary bg-opacity-75 text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-bar-chart-line-fill"></i> <strong>Regresión Lineal</strong></h3>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0" style="text-align: justify;">
+                        La <strong>regresión lineal</strong> permite predecir el consumo energético en hogares o industrias a partir de variables como temperatura, ocupación o producción, facilitando la planificación y el ahorro de energía.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Tarjeta de Regresión Logística -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #e6ffe6 0%, #d0f2ff 100%);">
+                <div class="card-header bg-success bg-opacity-75 text-white text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-arrow-repeat"></i> <strong>Regresión Logística</strong></h3>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0" style="text-align: justify;">
+                        La <strong>regresión logística</strong> ayuda a clasificar instalaciones según su eficiencia energética o a predecir la probabilidad de adopción de tecnologías renovables, contribuyendo a la toma de decisiones sostenibles.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Tarjeta de KNN -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #fffde0 0%, #f7f7b2 100%);">
+                <div class="card-header bg-warning bg-opacity-75 text-dark text-center rounded-top-4">
+                    <h3 class="mb-0"><i class="bi bi-diagram-3"></i> <strong>K-Nearest Neighbors (K-NN)</strong></h3>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0" style="text-align: justify;">
+                        El algoritmo <strong>K-NN</strong> puede clasificar patrones de consumo energético, identificar usuarios con alto potencial de ahorro o segmentar zonas para implementar energías renovables de manera eficiente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+@app.route('/entendimiento')
+def entendimiento():
+    return render_template('entendimiento.html')
