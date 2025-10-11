@@ -18,7 +18,13 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Traducir necesidades empresariales en metas concretas para el proyecto de machine learning.</li>
+                        <li>Optimizar el consumo energético en los hogares mediante un modelo predictivo que estime la cantidad de puntos de conexión y dispositivos activos según el número de personas y tipo de aparatos eléctricos utilizados.
+
+                        <li>Identificar patrones de consumo que permitan proponer estrategias para reducir el desperdicio energético y fomentar el uso racional de la electricidad.</li>
+
+                        <li>Apoyar la planificación de infraestructuras domésticas inteligentes, facilitando decisiones sobre la instalación de puntos de energía y dispositivos IoT eficientes.</li>
+
+                        <li>Contribuir al cumplimiento de la ODS 7, promoviendo el acceso a una energía asequible, segura, sostenible y moderna.</li>
                     </ul>
                 </div>
             </div>
@@ -31,7 +37,15 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Identificar las interrogantes específicas que el modelo debe responder.</li>
+                        <li>¿Existe una relación directa entre la cantidad de personas en un hogar y el número de dispositivos conectados?</li> 
+
+                        <li>¿Qué tipos de dispositivos consumen más energía en función de su frecuencia de uso?</li>
+
+                        <li>¿Cómo varía la demanda de energía según el tamaño del hogar y el número de puntos de conexión?</li>
+
+                        <li>¿Se pueden predecir los requerimientos energéticos de una vivienda nueva basándose en sus características demográficas y tecnológicas?</li>
+
+                        <li>¿Qué variables tienen mayor impacto en el consumo energético total: cantidad de dispositivos, tipo de dispositivo o número de personas?</li>
                     </ul>
                 </div>
             </div>
@@ -44,7 +58,37 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Explorar la calidad, relevancia y suficiencia de los datos disponibles.</li>
+                        <strong>Tipo de datos necesarios:</strong>
+
+                        <li>Número de personas por vivienda.</li>
+
+                        <li>Cantidad de dispositivos conectados.</li>
+
+                        <li>Tipos de dispositivos (electrodomésticos, móviles, computadores, iluminación, etc.).</li>
+
+                        <li>Consumo energético mensual o diario.</li>
+
+                        <li>Cantidad de puntos de conexión (enchufes o tomas eléctricas).</li>
+
+                        <li>Horarios de mayor uso.</li>
+
+                        <strong>Calidad de los datos:</strong>
+
+                        <li>Verificar valores faltantes (por ejemplo, viviendas sin registro completo).</li>
+
+                        <li>Eliminar duplicados o registros inconsistentes.</li>
+
+                        <li>Normalizar unidades de medida (kWh, cantidad de dispositivos, horas de uso, etc.).</li>
+
+                        <li>Evaluar la correlación entre variables para evitar redundancias.</li>
+
+                        <strong>Fuentes posibles:</strong>
+
+                        <li>Encuestas de hogares.</li>
+
+                        <li>Datos abiertos del DANE o del Ministerio de Energía.</li>
+
+                        <li>Sensores domésticos IoT o simulaciones de consumo.</li>
                     </ul>
                 </div>
             </div>
@@ -57,7 +101,29 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Considerar limitaciones y riesgos, asegurando la viabilidad técnica y organizacional.</li>
+                        <strong>Técnica:</strong>
+
+                        <li>Viable mediante modelos de regresión (Regresión Lineal, Random Forest Regressor, o Redes Neuronales).</li>
+
+                        <li>Requiere una base de datos con suficientes registros para garantizar la precisión del modelo.</li>
+
+                        <strong>Económica:</strong>
+
+                        <li>Bajo costo si se utilizan datos abiertos o simulados.</li>
+
+                        <li>Mayor inversión si se requiere instalación de sensores o recolección de datos en campo.</li>
+
+                        <strong>Operativa:</strong>
+
+                        <li>El modelo puede integrarse a una interfaz visual para análisis predictivo en tiempo real.</li>
+
+                        <li>Se puede usar Python (Scikit-learn, Pandas, Streamlit) para crear un prototipo funcional.</li>
+
+                        <strong>Ética y ambiental:</strong>
+
+                        <li>Alineado con la sostenibilidad energética (ODS 7).</li>
+
+                        <li>Promueve el uso responsable de los recursos sin invadir la privacidad del hogar.</li>
                     </ul>
                 </div>
             </div>
