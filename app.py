@@ -1,211 +1,290 @@
-from flask import Flask
-from flask import render_template, request
-import pandas as pd
 import os
+import io
+from datetime import datetime
 
-# Asegúrate de tener estos módulos implementados en tu proyecto
-# Si no existen, comenta o implementa funciones dummy para pruebas
-try:
-    import Relineal
-except ImportError:
-    Relineal = None
-try:
-    import Reg_Logis as ReLogistica
-except ImportError:
-    ReLogistica = None
-try:
-    import knn
-except ImportError:
-    knn = None
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, jsonify, send_file
+)
+from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
+import pandas as pd
+import numpy as np
 
-# Variable global para almacenar las conclusiones actuales
-conclusiones_actuales = None
+# --- Render de gráficos sin GUI ---
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-@app.route('/')
-def inicio():
-    return render_template('inicio.html')
+# ----------------------------------
+# Configuración básica
+# ----------------------------------
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DATA_FOLDER = os.path.join(BASE_DIR, "DataSheet")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
-@app.route('/menu')
-def menu():
-    return render_template('menu.html')
+ALLOWED_EXTENSIONS = {"csv"}
 
-@app.route('/index1')
-def index1():
-    # Página de caso de uso: Predicción de consumo energético
-    return render_template('index1.html')
+os.makedirs(DATA_FOLDER, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/index2')
-def index2():
-    # Página de caso de uso: Energía solar
-    return render_template('index2.html')
-
-@app.route('/index3')
-def index3():
-    # Página de caso de uso: Eficiencia energética
-    return render_template('index3.html')
-
-@app.route('/index4')
-def index4():
-    # Página de caso de uso: Energía industrial
-    return render_template('index4.html')
-
-@app.route('/LR', methods=["GET", "POST"])
-def LR():
-    # Ejercicio de Regresión Lineal para consumo energético
-    calculateResult = None
-    if request.method == "POST" and Relineal:
-        try:
-            temperatura = float(request.form["temperatura"])
-            ocupacion = float(request.form["ocupacion"])
-            calculateResult = Relineal.predecir_consumo_energia(temperatura, ocupacion)
-            import time
-            time.sleep(0.1)
-            Relineal.save_plot(temperatura, ocupacion, calculateResult)
-        except ValueError:
-            return "Por favor ingrese valores numéricos válidos"
-        except Exception as e:
-            return f"Error: {str(e)}"
-    return render_template("rl.html", result=calculateResult)
-
-@app.route('/conceptos')
-def conceptos():
-    return render_template('conceptos.html')
-
-@app.route('/conceptos_reg_logistica')
-def conceptos_reg_logistica():
-    return render_template('conceptos_reg_logistica.html')
-
-# Cargar datos desde el archivo CSV (de energía sostenible)
-data = None
-try:
-    data = pd.read_csv('./DataSheet/data.csv', delimiter=';')
-except FileNotFoundError:
-    print("Error: El archivo data.csv no se encontró.")
-except Exception as e:
-    print(f"Error al cargar datos: {e}")
-
-@app.route('/ejercicio_reg_logistica', methods=['GET', 'POST'])
-def ejercicio_reg_logistica():
-    # Ejercicio de Regresión Logística para eficiencia energética
-    result = None
-    if request.method == 'POST' and ReLogistica:
-        try:
-            eficiencia = float(request.form['eficiencia'])
-            renovable = float(request.form['renovable'])
-            tipo_instalacion = request.form['tipo_instalacion'].lower()
-            consumo = float(request.form['consumo'])
-
-            entrada = pd.DataFrame([{
-                "eficiencia_energetica": eficiencia,
-                "porcentaje_renovable": renovable,
-                "consumo_total": consumo,
-                "tipo_instalacion": tipo_instalacion
-            }])
-
-            entrada = pd.get_dummies(entrada, columns=["tipo_instalacion"], drop_first=True)
-
-            for col in ReLogistica.x.columns:
-                if col not in entrada.columns:
-                    entrada[col] = 0
-            entrada = entrada[ReLogistica.x.columns]
-
-            features = entrada.values[0]
-            etiqueta, probabilidad = ReLogistica.predict_label(features)
-
-            result = {
-                "etiqueta": etiqueta,
-                "probabilidad": probabilidad
-            }
-
-        except ValueError:
-            result = {"error": "Por favor ingrese valores válidos"}
-        except Exception as e:
-            result = {"error": f"Error: {str(e)}"}
-
-    return render_template('ejercicio_reg_logistica.html', result=result)
-
-@app.route('/TiposAlgoritmos')
-def tipos_algoritmos():
-    return render_template('TiposAlgoritmos.html')
-
-@app.route('/ejercicio_knn', methods=['GET', 'POST'])
-def ejercicio_knn():
-    global conclusiones_actuales
-    metrics = None
-    pred = None
-    prob = None
-
-    if request.method == 'POST' and knn:
-        if 'train' in request.form:
-            try:
-                datos_nuevos = verificar_datos_nuevos()
-                resultado_completo = knn.entrenar_modelo()
-                metrics = {
-                    "accuracy": resultado_completo["accuracy"],
-                    "report": resultado_completo["report"],
-                    "classes": resultado_completo["classes"]
-                }
-                conclusiones_actuales = resultado_completo["conclusiones"]
-                with open("static/ultimo_entrenamiento.txt", "w") as f:
-                    f.write(str(pd.Timestamp.now()))
-                pred = request.form.get('pred')
-                prob = request.form.get('prob')
-            except Exception as e:
-                metrics = {'error': f'Error entrenando: {e}'}
-        elif 'predict' in request.form:
-            try:
-                edad = float(request.form['edad'])
-                consumo = float(request.form['consumo'])
-                renovable = float(request.form['renovable'])
-                tipo_usuario_num = int(request.form['tipo_usuario'])
-                threshold = float(request.form.get('threshold', 0.5))
-                tipo_usuario_map = {1: "Residencial", 2: "Comercial", 3: "Industrial"}
-                tipo_usuario = tipo_usuario_map.get(tipo_usuario_num, "Residencial")
-                features = {
-                    "Edad": edad,
-                    "ConsumoEnergia": consumo,
-                    "PorcentajeRenovable": renovable,
-                    "TipoUsuario": tipo_usuario
-                }
-                pred, prob = knn.predict_label(features, threshold)
-            except Exception as e:
-                pred = f"Error: {e}"
-                prob = None
-    else:
-        if conclusiones_actuales is None and knn and os.path.exists("static/knn_model.pkl"):
-            try:
-                conclusiones_actuales = knn.generar_conclusiones_desde_modelo_existente()
-            except:
-                conclusiones_actuales = None
-
-    return render_template(
-        'ejercicio_knn.html',
-        metrics=metrics,
-        pred=pred,
-        prob=prob,
-        conclusiones=conclusiones_actuales
+def create_app():
+    app = Flask(
+        __name__,
+        template_folder="Templates"  # Tu carpeta se llama "Templates"
     )
+    app.config["SECRET_KEY"] = "dev-key-change-this"
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50MB
 
-@app.route('/entendimiento')
-def entendimiento():
-    return render_template('entendimiento.html')
+    # Estado simple en memoria (suficiente para dev)
+    app.current_df = None
+    app.current_name = None
 
-def verificar_datos_nuevos():
-    archivo_datos = "DataSheet/Knn_data.csv"
-    archivo_entrenamiento = "static/ultimo_entrenamiento.txt"
-    if not os.path.exists(archivo_entrenamiento):
-        return True
-    if not os.path.exists(archivo_datos):
-        return False
+    # Carga dataset por defecto si existe
+    default_csv = os.path.join(DATA_FOLDER, "data.csv")
+    if os.path.exists(default_csv):
+        df, err = load_csv(default_csv)
+        if df is not None:
+            app.current_df = df
+            app.current_name = "data.csv"
+        else:
+            print(f"[WARN] No se pudo cargar DataSheet/data.csv: {err}")
+
+    # ------------------------
+    # Utilidades
+    # ------------------------
+    def allowed_file(filename):
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    def get_df_or_404():
+        if app.current_df is None:
+            flash("Aún no hay un dataset cargado. Sube un archivo CSV.", "warning")
+            return None
+        return app.current_df
+
+    # ------------------------
+    # Rutas
+    # ------------------------
+    @app.route("/")
+    def index():
+        """Página de inicio: upload + resumen + preview."""
+        df = app.current_df
+        summary = None
+        preview = None
+        numeric_cols, categorical_cols = [], []
+
+        if df is not None:
+            summary = build_summary(df)
+            preview = df.head(50).copy()
+            numeric_cols = df.select_dtypes(include="number").columns.tolist()
+            categorical_cols = df.select_dtypes(exclude="number").columns.tolist()
+
+        return render_template(
+            "inicio.html",
+            has_df=df is not None,
+            filename=app.current_name,
+            summary=summary,
+            preview=preview,
+            numeric_cols=numeric_cols,
+            categorical_cols=categorical_cols
+        )
+
+    @app.route("/upload", methods=["POST"])
+    def upload():
+        """Carga de CSV y set como dataset activo."""
+        if "file" not in request.files:
+            flash("No se envió ningún archivo.", "danger")
+            return redirect(url_for("index"))
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("Selecciona un archivo CSV.", "danger")
+            return redirect(url_for("index"))
+
+        if file and allowed_file(file.filename):
+            safe_name = secure_filename(file.filename)
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            final_name = f"{ts}_{safe_name}"
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], final_name)
+            file.save(save_path)
+
+            df, err = load_csv(save_path)
+            if df is None:
+                flash(f"No se pudo leer el CSV: {err}", "danger")
+                return redirect(url_for("index"))
+
+            app.current_df = df
+            app.current_name = safe_name
+            flash(f"Archivo '{safe_name}' cargado correctamente.", "success")
+            return redirect(url_for("index"))
+
+        flash("Formato no permitido. Sube un .csv", "danger")
+        return redirect(url_for("index"))
+
+    @app.route("/entendimiento")
+    def entendimiento():
+        """Página de EDA y gráficos."""
+        df = get_df_or_404()
+        if df is None:
+            return redirect(url_for("index"))
+
+        numeric_cols = df.select_dtypes(include="number").columns.tolist()
+        categorical_cols = df.select_dtypes(exclude="number").columns.tolist()
+
+        # Sugerimos la primera numérica si existe
+        default_numeric = numeric_cols[0] if numeric_cols else None
+        default_categorical = categorical_cols[0] if categorical_cols else None
+
+        return render_template(
+            "entendimiento.html",
+            filename=app.current_name,
+            numeric_cols=numeric_cols,
+            categorical_cols=categorical_cols,
+            default_numeric=default_numeric,
+            default_categorical=default_categorical
+        )
+
+    @app.route("/api/column-data")
+    def api_column_data():
+        """
+        Devuelve datos para Chart.js:
+        - mode=hist  -> histograma columna numérica
+        - mode=counts -> value_counts columna categórica
+        """
+        df = get_df_or_404()
+        if df is None:
+            return jsonify({"error": "No dataset"}), 400
+
+        col = request.args.get("col")
+        mode = request.args.get("mode", "hist")
+        bins = int(request.args.get("bins", 15))
+
+        if col not in df.columns:
+            return jsonify({"error": "Columna no encontrada"}), 400
+
+        series = df[col].dropna()
+
+        if mode == "counts":
+            vc = series.astype(str).value_counts().head(30)  # top 30
+            labels = vc.index.tolist()
+            values = vc.values.tolist()
+            return jsonify({"labels": labels, "values": values})
+
+        # histograma numérico
+        if not np.issubdtype(series.dtype, np.number):
+            return jsonify({"error": "La columna no es numérica"}), 400
+
+        counts, edges = np.histogram(series, bins=bins)
+        labels = [f"{edges[i]:.2f}-{edges[i+1]:.2f}" for i in range(len(edges)-1)]
+        return jsonify({"labels": labels, "values": counts.tolist()})
+
+    @app.route("/plot/corr.png")
+    def plot_corr():
+        """PNG con heatmap de correlación (numérico)."""
+        df = get_df_or_404()
+        if df is None:
+            return "", 404
+
+        num = df.select_dtypes(include="number")
+        if num.empty:
+            # Generar imagen vacía con texto
+            fig, ax = plt.subplots(figsize=(4, 2))
+            ax.text(0.5, 0.5, "No hay columnas numéricas", ha="center", va="center")
+            ax.axis("off")
+        else:
+            corr = num.corr(numeric_only=True)
+
+            fig, ax = plt.subplots(figsize=(6, 5))
+            im = ax.imshow(corr, cmap="viridis")
+            ax.set_xticks(range(len(corr.columns)))
+            ax.set_xticklabels(corr.columns, rotation=45, ha="right")
+            ax.set_yticks(range(len(corr.columns)))
+            ax.set_yticklabels(corr.columns)
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            ax.set_title("Matriz de correlación")
+
+            # Mostrar valores encima
+            for i in range(len(corr.columns)):
+                for j in range(len(corr.columns)):
+                    ax.text(j, i, f"{corr.values[i, j]:.2f}",
+                            ha="center", va="center", color="white", fontsize=8)
+
+            fig.tight_layout()
+
+        buf = io.BytesIO()
+        plt.tight_layout()
+        fig.savefig(buf, format="png", dpi=160, bbox_inches="tight")
+        plt.close(fig)
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+
+    @app.route("/download/preview.csv")
+    def download_preview():
+        """Descarga las primeras 1000 filas como CSV."""
+        df = get_df_or_404()
+        if df is None:
+            return "", 404
+
+        out = io.StringIO()
+        df.head(1000).to_csv(out, index=False)
+        mem = io.BytesIO(out.getvalue().encode("utf-8"))
+        mem.seek(0)
+        return send_file(
+            mem,
+            as_attachment=True,
+            download_name="preview.csv",
+            mimetype="text/csv"
+        )
+
+    return app
+
+
+# ----------------------------------
+# Helpers de datos
+# ----------------------------------
+def load_csv(path):
+    """Lee CSV con detección flexible de separador y encoding."""
     try:
-        mod_time_datos = os.path.getmtime(archivo_datos)
-        with open(archivo_entrenamiento, "r") as f:
-            ultimo_entrenamiento = pd.Timestamp(f.read().strip())
-        return mod_time_datos > ultimo_entrenamiento.timestamp()
-    except:
-        return True
+        # sep=None infiere delimitador (coma, punto y coma, tab, etc.)
+        df = pd.read_csv(path, sep=None, engine="python", encoding="utf-8", on_bad_lines="skip")
+        return df, None
+    except Exception as e_utf8:
+        try:
+            df = pd.read_csv(path, sep=None, engine="python", encoding="latin-1", on_bad_lines="skip")
+            return df, None
+        except Exception as e2:
+            return None, f"{e_utf8} / {e2}"
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+def build_summary(df: pd.DataFrame):
+    """Resumen general del dataset."""
+    summary = {
+        "filas": int(df.shape[0]),
+        "columnas": int(df.shape[1]),
+        "faltantes_total": int(df.isna().sum().sum()),
+        "duplicados": int(df.duplicated().sum()),
+        "num_cols": df.select_dtypes(include="number").columns.tolist(),
+        "cat_cols": df.select_dtypes(exclude="number").columns.tolist()
+    }
+
+    # Tipos de datos
+    dtypes = df.dtypes.astype(str).to_dict()
+    summary["dtypes"] = dtypes
+
+    # Estadísticos rápidos numéricos
+    if not df.select_dtypes(include="number").empty:
+        stats = df.describe().T.reset_index().rename(columns={"index": "columna"})
+        summary["stats_table"] = stats.to_dict(orient="records")
+    else:
+        summary["stats_table"] = []
+
+    return summary
+
+
+# -------------------------
+# Entry point
+# -------------------------
+if __name__ == "__main__":
+    app = create_app()
+    # host='0.0.0.0' si quieres probar desde otro equipo de la red
+    app.run(debug=True)

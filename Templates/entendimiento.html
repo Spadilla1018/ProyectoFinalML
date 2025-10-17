@@ -1,134 +1,129 @@
 {% extends "base.html" %}
-
-{% block title %}Entendimiento del Negocio y los Datos - ODS 7{% endblock %}
-
 {% block content %}
-<div class="container py-4">
-    <div class="text-center mb-5">
-        <h1 class="border bg-success bg-opacity-75 text-white p-4 rounded-4 shadow">
-            <i class="bi bi-search"></i> <strong>Entendimiento del Negocio y los Datos</strong>
-        </h1>
+<h1 class="text-2xl md:text-3xl font-bold mb-2">Entendimiento de Datos</h1>
+<p class="text-sm text-slate-500 mb-6">Dataset activo: <strong>{{ filename }}</strong></p>
+
+<div class="grid lg:grid-cols-3 gap-6">
+  <!-- Panel de configuración -->
+  <section class="glass rounded-2xl p-5 shadow">
+    <h2 class="font-semibold mb-3 flex items-center gap-2">
+      <i class="ti ti-adjustments"></i> Controles
+    </h2>
+
+    <div class="space-y-5 text-sm">
+      <div>
+        <label class="block mb-1 font-medium">Columna numérica (histograma)</label>
+        <select id="numSelect" class="w-full rounded-lg border-slate-300">
+          {% for c in numeric_cols %}
+            <option value="{{ c }}" {% if c == default_numeric %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-1 font-medium">Bins</label>
+        <input id="bins" type="number" value="15" min="5" max="60" class="w-28 rounded-lg border-slate-300">
+      </div>
+
+      <div>
+        <label class="block mb-1 font-medium">Columna categórica (frecuencias)</label>
+        <select id="catSelect" class="w-full rounded-lg border-slate-300">
+          {% for c in categorical_cols %}
+            <option value="{{ c }}" {% if c == default_categorical %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="btnHist" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+          Dibujar Histograma
+        </button>
+        <button id="btnCounts" class="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700">
+          Dibujar Frecuencias
+        </button>
+      </div>
     </div>
-    <div class="row g-4">
-        <!-- Objetivos de Negocio -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #e0ffe0 0%, #b2f7ef 100%);">
-                <div class="card-header bg-primary bg-opacity-75 text-white text-center rounded-top-4">
-                    <h4 class="mb-0"><i class="bi bi-bullseye"></i> Objetivos de Negocio</h4>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Optimizar el consumo energético en los hogares mediante un modelo predictivo que estime la cantidad de puntos de conexión y dispositivos activos según el número de personas y tipo de aparatos eléctricos utilizados.
+  </section>
 
-                        <li>Identificar patrones de consumo que permitan proponer estrategias para reducir el desperdicio energético y fomentar el uso racional de la electricidad.</li>
-
-                        <li>Apoyar la planificación de infraestructuras domésticas inteligentes, facilitando decisiones sobre la instalación de puntos de energía y dispositivos IoT eficientes.</li>
-
-                        <li>Contribuir al cumplimiento de la ODS 7, promoviendo el acceso a una energía asequible, segura, sostenible y moderna.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- Preguntas Clave -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #e6ffe6 0%, #d0f2ff 100%);">
-                <div class="card-header bg-success bg-opacity-75 text-white text-center rounded-top-4">
-                    <h4 class="mb-0"><i class="bi bi-question-circle"></i> Preguntas Clave</h4>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <li>¿Existe una relación directa entre la cantidad de personas en un hogar y el número de dispositivos conectados?</li> 
-
-                        <li>¿Qué tipos de dispositivos consumen más energía en función de su frecuencia de uso?</li>
-
-                        <li>¿Cómo varía la demanda de energía según el tamaño del hogar y el número de puntos de conexión?</li>
-
-                        <li>¿Se pueden predecir los requerimientos energéticos de una vivienda nueva basándose en sus características demográficas y tecnológicas?</li>
-
-                        <li>¿Qué variables tienen mayor impacto en el consumo energético total: cantidad de dispositivos, tipo de dispositivo o número de personas?</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- Evaluación de Datos -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #fffde0 0%, #f7f7b2 100%);">
-                <div class="card-header bg-warning bg-opacity-75 text-dark text-center rounded-top-4">
-                    <h4 class="mb-0"><i class="bi bi-database-check"></i> Evaluación de Datos</h4>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <strong>Tipo de datos necesarios:</strong>
-
-                        <li>Número de personas por vivienda.</li>
-
-                        <li>Cantidad de dispositivos conectados.</li>
-
-                        <li>Tipos de dispositivos (electrodomésticos, móviles, computadores, iluminación, etc.).</li>
-
-                        <li>Consumo energético mensual o diario.</li>
-
-                        <li>Cantidad de puntos de conexión (enchufes o tomas eléctricas).</li>
-
-                        <li>Horarios de mayor uso.</li>
-
-                        <strong>Calidad de los datos:</strong>
-
-                        <li>Verificar valores faltantes (por ejemplo, viviendas sin registro completo).</li>
-
-                        <li>Eliminar duplicados o registros inconsistentes.</li>
-
-                        <li>Normalizar unidades de medida (kWh, cantidad de dispositivos, horas de uso, etc.).</li>
-
-                        <li>Evaluar la correlación entre variables para evitar redundancias.</li>
-
-                        <strong>Fuentes posibles:</strong>
-
-                        <li>Encuestas de hogares.</li>
-
-                        <li>Datos abiertos del DANE o del Ministerio de Energía.</li>
-
-                        <li>Sensores domésticos IoT o simulaciones de consumo.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- Análisis de Viabilidad -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow rounded-4 border-0" style="background: linear-gradient(135deg, #e0ffe0 0%, #e6ffe6 100%);">
-                <div class="card-header bg-info bg-opacity-75 text-dark text-center rounded-top-4">
-                    <h4 class="mb-0"><i class="bi bi-shield-check"></i> Análisis de Viabilidad</h4>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <strong>Técnica:</strong>
-
-                        <li>Viable mediante modelos de regresión (Regresión Lineal, Random Forest Regressor, o Redes Neuronales).</li>
-
-                        <li>Requiere una base de datos con suficientes registros para garantizar la precisión del modelo.</li>
-
-                        <strong>Económica:</strong>
-
-                        <li>Bajo costo si se utilizan datos abiertos o simulados.</li>
-
-                        <li>Mayor inversión si se requiere instalación de sensores o recolección de datos en campo.</li>
-
-                        <strong>Operativa:</strong>
-
-                        <li>El modelo puede integrarse a una interfaz visual para análisis predictivo en tiempo real.</li>
-
-                        <li>Se puede usar Python (Scikit-learn, Pandas, Streamlit) para crear un prototipo funcional.</li>
-
-                        <strong>Ética y ambiental:</strong>
-
-                        <li>Alineado con la sostenibilidad energética (ODS 7).</li>
-
-                        <li>Promueve el uso responsable de los recursos sin invadir la privacidad del hogar.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+  <!-- Gráficos -->
+  <section class="lg:col-span-2 space-y-6">
+    <div class="glass rounded-2xl p-5 shadow">
+      <h3 class="font-semibold mb-3">Histograma</h3>
+      <canvas id="histCanvas" height="140"></canvas>
     </div>
+
+    <div class="glass rounded-2xl p-5 shadow">
+      <h3 class="font-semibold mb-3">Frecuencia de categorías (Top 30)</h3>
+      <canvas id="barCanvas" height="140"></canvas>
+    </div>
+
+    <div class="glass rounded-2xl p-5 shadow">
+      <h3 class="font-semibold mb-3">Matriz de correlación</h3>
+      <img src="{{ url_for('plot_corr') }}" alt="Matriz de correlación" class="rounded-xl border border-white/60 w-full" />
+    </div>
+  </section>
 </div>
-{% endblock %}
 
+<script>
+  let histChart = null;
+  let barChart = null;
+
+  async function fetchJSON(url) {
+    const r = await fetch(url);
+    return await r.json();
+  }
+
+  function drawChart(ctx, type, labels, values, title) {
+    if (type === 'bar' && barChart) { barChart.destroy(); }
+    if (type === 'line' || type === 'bar' || type === 'scatter') { /* nada */ }
+    if (type === 'hist' && histChart) { histChart.destroy(); }
+
+    const data = {
+      labels: labels,
+      datasets: [{ label: title, data: values }]
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { ticks: { autoSkip: true, maxTicksLimit: 20 } } }
+    };
+
+    const chartType = (type === 'hist') ? 'bar' : type;
+    const chart = new Chart(ctx, { type: chartType, data, options });
+
+    if (type === 'hist') histChart = chart;
+    else barChart = chart;
+  }
+
+  // Botones
+  document.getElementById('btnHist')?.addEventListener('click', async () => {
+    const col = document.getElementById('numSelect')?.value;
+    const bins = document.getElementById('bins')?.value || 15;
+    if (!col) return;
+
+    const data = await fetchJSON(`/api/column-data?mode=hist&col=${encodeURIComponent(col)}&bins=${bins}`);
+    if (data.error) { alert(data.error); return; }
+
+    const ctx = document.getElementById('histCanvas').getContext('2d');
+    drawChart(ctx, 'hist', data.labels, data.values, `Histograma: ${col}`);
+  });
+
+  document.getElementById('btnCounts')?.addEventListener('click', async () => {
+    const col = document.getElementById('catSelect')?.value;
+    if (!col) return;
+
+    const data = await fetchJSON(`/api/column-data?mode=counts&col=${encodeURIComponent(col)}`);
+    if (data.error) { alert(data.error); return; }
+
+    const ctx = document.getElementById('barCanvas').getContext('2d');
+    drawChart(ctx, 'bar', data.labels, data.values, `Frecuencia: ${col}`);
+  });
+
+  // Autodibujar en carga (si hay columnas)
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btnHist')?.click();
+    document.getElementById('btnCounts')?.click();
+  });
+</script>
+{% endblock %}
