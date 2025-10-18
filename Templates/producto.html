@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto rounded-2xl glass p-6 shadow-soft">
+  <div class="flex items-center gap-3 mb-4">
+    <i class="ti ti-beer text-3xl text-brand-600"></i>
+    <h1 class="text-3xl font-bold">Cerveza Artesanal sin Alcohol · Fresa &amp; Mora</h1>
+  </div>
+
+  <p class="text-lg text-slate-700 dark:text-slate-200 mb-4 leading-relaxed">
+    Elaborada con ingredientes seleccionados, frutas naturales y un cuidadoso control de fermentación de 2 semanas.
+    Aplicamos un proceso de des-alcoholización durante la fermentación para garantizar un ABV inferior al 0.5%,
+    manteniendo el cuerpo, aroma y frescura de una cerveza artesanal.
+  </p>
+
+  {% set beer_path = url_for('static', filename='img/beer_hero.jpg') %}
+  {% set strawberry_path = url_for('static', filename='img/strawberry.jpg') %}
+  {% set blackberry_path = url_for('static', filename='img/blackberry.jpg') %}
+
+  <div class="grid md:grid-cols-3 gap-4 my-6">
+    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+      <img src="{{ beer_path }}" loading="lazy" alt="Cerveza artesanal"
+           onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
+      <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+    </div>
+    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+  <img src="{{ url_for('static', filename='img/fresas.jpg') }}" 
+       loading="lazy" 
+       alt="Fresas"
+       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
+       class="h-full w-full object-cover">
+  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+</div>
+
+    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+  <img src="{{ url_for('static', filename='img/moras.png') }}" 
+       loading="lazy" 
+       alt="Moras"
+       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
+       class="h-full w-full object-cover">
+  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+</div>
+
+  </div>
+  <style>
+    .placeholder { display: grid !important; }
+    .placeholder > div { display: grid !important; }
+  </style>
+
+  <h2 class="text-2xl font-semibold mt-6 mb-3 text-brand-700 dark:text-brand-300">Objetivo del Producto</h2>
+  <p class="text-slate-700 dark:text-slate-200 mb-4">
+    Ofrecer una alternativa saludable y responsable para quienes disfrutan del mundo cervecero sin consumir alcohol.
+    Buscamos conservar la esencia artesanal, potenciar los sabores de fresa y mora, y garantizar un producto fresco,
+    consistente y de calidad.
+  </p>
+
+  <h2 class="text-2xl font-semibold mt-6 mb-3 text-brand-700 dark:text-brand-300">Proceso de Elaboración</h2>
+  <ul class="list-disc pl-6 space-y-2 text-slate-700 dark:text-slate-200">
+    <li><strong>Fermentación controlada:</strong> dos semanas para desarrollar cuerpo y sabor natural.</li>
+    <li><strong>Des-alcoholización:</strong> aplicación de un agente que elimina el alcohol sin afectar el perfil sensorial.</li>
+    <li><strong>Sabores naturales:</strong> fresa y mora auténticas, sin colorantes ni saborizantes artificiales.</li>
+  </ul>
+
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a href="{{ url_for('producto_folleto') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700">
+      <i class="ti ti-file-type-pdf"></i> Descargar folleto PDF
+    </a>
+    <a href="{{ url_for('producto_ficha') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800">
+      <i class="ti ti-file-analytics"></i> Ficha técnica PDF
+    </a>
+    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+      <i class="ti ti-arrow-left"></i> Volver al Inicio
+    </a>
+  </div>
+</div>
+{% endblock %}

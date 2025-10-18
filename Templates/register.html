@@ -1,25 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-md mx-auto glass rounded-2xl p-6 shadow">
+<div class="max-w-md mx-auto glass rounded-2xl p-6 shadow-soft">
   <h1 class="text-2xl font-bold mb-4">Crear cuenta</h1>
-  <form method="post" action="{{ url_for('register') }}" class="space-y-4">
+  <form method="post" class="space-y-4">
     <div>
-      <label class="block text-sm font-medium">Nombre</label>
-      <input type="text" name="name" required class="w-full rounded-lg border-slate-300">
+      <label class="block text-sm mb-1">Nombre</label>
+      <input name="name" required class="w-full rounded-lg border px-3 py-2">
     </div>
     <div>
-      <label class="block text-sm font-medium">Correo</label>
-      <input type="email" name="email" required class="w-full rounded-lg border-slate-300">
+      <label class="block text-sm mb-1">Correo</label>
+      <input name="email" type="email" required class="w-full rounded-lg border px-3 py-2">
     </div>
     <div>
-      <label class="block text-sm font-medium">Contraseña</label>
-      <input type="password" name="password" required class="w-full rounded-lg border-slate-300">
+      <label class="block text-sm mb-1">Contraseña</label>
+      <input name="password" type="password" required class="w-full rounded-lg border px-3 py-2">
     </div>
-    <button class="w-full py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">Crear cuenta</button>
+    <button class="px-4 py-2 rounded-lg bg-slate-900 text-white">Crear</button>
   </form>
-  <p class="text-sm text-slate-500 mt-4">
-    ¿Ya tienes cuenta?
-    <a href="{{ url_for('login') }}" class="text-emerald-700 underline">Inicia sesión</a>.
-  </p>
 </div>
 {% endblock %}

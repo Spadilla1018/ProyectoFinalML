@@ -1,110 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
 
-<section class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-200 via-teal-200 to-cyan-200 p-8 md:p-12 shadow">
-  <div class="absolute -top-10 -right-10 w-56 h-56 rounded-full bg-white/40 blur-2xl"></div>
-  <div class="absolute -bottom-12 -left-12 w-64 h-64 rounded-full bg-white/30 blur-2xl"></div>
-
-  <div class="relative max-w-4xl">
-    <div class="flex items-center gap-3 mb-3">
-      <i class="ti ti-chart-dots-2 text-3xl text-emerald-700"></i>
-      <span class="text-emerald-800 font-semibold tracking-wide">Proyecto Machine Learning</span>
+<div class="grid lg:grid-cols-2 gap-6">
+  <section class="rounded-2xl glass p-6 shadow-soft">
+    <div class="flex items-center gap-3 mb-2">
+      <i class="ti ti-beer text-2xl text-brand-600"></i>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Cerveza 0.0% · Fresa &amp; Mora</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-300">Panel de fermentación y calidad</p>
+      </div>
     </div>
-    <h1 class="text-3xl md:text-5xl font-extrabold text-slate-800 leading-tight">
-      Bienvenido a tu Panel de Análisis
-    </h1>
-    <p class="mt-3 text-slate-700 md:text-lg">
-      Sube un archivo <strong>.csv</strong> para comenzar. Nos encargamos del resto:
-      lectura flexible, gráficos y una interfaz limpia para explorar tus datos.
+    <p class="mt-3 text-slate-700 dark:text-slate-200">
+      Proyecto académico que desarrolla una cerveza artesanal sin alcohol (ABV &lt; 0.5%) con sabores naturales
+      de fresa y mora. Explora los lotes, registra lecturas y conoce nuestro producto.
     </p>
 
-    <div class="mt-8 bg-white/80 backdrop-blur rounded-2xl p-6 md:p-7 shadow-lg">
-      <h2 class="font-semibold mb-3 flex items-center gap-2 text-slate-800">
-        <i class="ti ti-upload"></i> Subir archivo CSV
-      </h2>
-      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="space-y-4">
-        <input type="file" name="file" accept=".csv"
-               class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
-                      file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer
-                      border border-slate-200 rounded-xl bg-white" />
-        <button class="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700">
-          Subir y analizar
-        </button>
-      </form>
-
-      {% if filename %}
-      <p class="text-sm text-slate-500 mt-3">
-        Último archivo cargado: <strong>{{ filename }}</strong>
-      </p>
+    <div class="mt-6 flex gap-3">
+      <a href="{{ url_for('producto') }}" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 flex items-center gap-2">
+        <i class="ti ti-info-circle"></i> Ver Producto
+      </a>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('batches_list') }}" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-2">
+        <i class="ti ti-barrel"></i> Lotes
+      </a>
       {% endif %}
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="mt-10 grid md:grid-cols-2 gap-6">
-  <div class="glass rounded-2xl p-6 shadow">
-    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-      <i class="ti ti-rocket"></i> ¿Cómo funciona?
+  <section class="rounded-2xl glass p-6 shadow-soft">
+    <h3 class="font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+      <i class="ti ti-photo"></i> Sabores &amp; Proceso
     </h3>
-    <ol class="space-y-3 text-slate-700">
-      <li class="flex gap-3">
-        <span class="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white text-sm">1</span>
-        <div><strong>Sube tu CSV</strong> desde el formulario superior.</div>
-      </li>
-      <li class="flex gap-3">
-        <span class="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-white text-sm">2</span>
-        <div>Te redirigiremos al módulo de <strong>entendimiento</strong> para visualizar.</div>
-      </li>
-      <li class="flex gap-3">
-        <span class="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-600 text-white text-sm">3</span>
-        <div>Explora gráficos y opciones sin complicarte con la configuración.</div>
-      </li>
-    </ol>
+    <div class="grid grid-cols-3 gap-3">
+      {% set beer_path = url_for('static', filename='img/beer_hero.jpg') %}
+      {% set strawberry_path = url_for('static', filename='img/strawberry.jpg') %}
+      {% set blackberry_path = url_for('static', filename='img/blackberry.jpg') %}
 
-    <div class="mt-6">
-      <a href="{{ url_for('entendimiento') }}"
-         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-        Ir a Entendimiento <i class="ti ti-arrow-right"></i>
-      </a>
+      <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+        <img src="{{ beer_path }}" loading="lazy" alt="Cerveza artesanal"
+             onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
+        <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+      </div>
+
+      <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+  <img src="{{ url_for('static', filename='img/fresas.jpg') }}" 
+       loading="lazy" 
+       alt="Fresas"
+       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
+       class="h-full w-full object-cover">
+  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+</div>
+
+
+      <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+  <img src="{{ url_for('static', filename='img/moras.png') }}" 
+       loading="lazy" 
+       alt="Moras"
+       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
+       class="h-full w-full object-cover">
+  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+</div>
+
     </div>
-  </div>
-
-  <div class="glass rounded-2xl p-6 shadow">
-    <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-      <i class="ti ti-bulb"></i> Recomendaciones
-    </h3>
-    <ul class="space-y-3 text-slate-700">
-      <li class="flex items-start gap-3">
-        <i class="ti ti-file-type-csv text-emerald-700 text-xl"></i>
-        <span>El archivo debe ser <strong>.csv</strong>. Detectamos separador automáticamente (coma, punto y coma, tab).</span>
-      </li>
-      <li class="flex items-start gap-3">
-        <i class="ti ti-letters-case text-teal-700 text-xl"></i>
-        <span>Incluye <strong>encabezados</strong> en la primera fila para nombrar las columnas.</span>
-      </li>
-      <li class="flex items-start gap-3">
-        <i class="ti ti-shield-check text-cyan-700 text-xl"></i>
-        <span>No guardamos tus datos de forma permanente: se usan sólo durante la sesión.</span>
-      </li>
-    </ul>
-  </div>
-</section>
-
-<section class="mt-10">
-  <div class="rounded-2xl p-6 text-center bg-white/70 backdrop-blur border border-white/60 shadow">
-    <h4 class="text-xl font-semibold text-slate-800">¿Listo para comenzar?</h4>
-    <p class="mt-1 text-slate-600">Sube tu CSV y visualiza resultados en segundos.</p>
-    <a href="#" onclick="window.scrollTo({top:0, behavior:'smooth'})"
-       class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700">
-      Subir archivo <i class="ti ti-upload"></i>
-    </a>
-  </div>
-</section>
-
-<div class="flex justify-center mt-6">
-  <h4 class="text-slate-700 font-semibold text-center">
-    <strong>Sabrina Padilla - Eison González - Proyecto de Predicción de Energía en el Hogar - 2025</strong>
-  </h4>
+    <style>
+      /* Si no hay imagen, mostramos un placeholder sin ir a internet */
+      .placeholder { display: grid !important; }
+      .placeholder > div { display: grid !important; }
+    </style>
+    <p class="text-sm text-slate-600 dark:text-slate-300 mt-3">
+      Fermentación controlada (14 días) y des-alcoholización durante ese periodo para preservar el perfil sensorial.
+    </p>
+  </section>
 </div>
 
 {% endblock %}
