@@ -75,14 +75,9 @@
 
   function drawChart(ctx, type, labels, values, title) {
     if (type === 'bar' && barChart) { barChart.destroy(); }
-    if (type === 'line' || type === 'bar' || type === 'scatter') { /* nada */ }
     if (type === 'hist' && histChart) { histChart.destroy(); }
 
-    const data = {
-      labels: labels,
-      datasets: [{ label: title, data: values }]
-    };
-
+    const data = { labels: labels, datasets: [{ label: title, data: values }] };
     const options = {
       responsive: true,
       maintainAspectRatio: false,
@@ -92,11 +87,9 @@
     const chartType = (type === 'hist') ? 'bar' : type;
     const chart = new Chart(ctx, { type: chartType, data, options });
 
-    if (type === 'hist') histChart = chart;
-    else barChart = chart;
+    if (type === 'hist') histChart = chart; else barChart = chart;
   }
 
-  // Botones
   document.getElementById('btnHist')?.addEventListener('click', async () => {
     const col = document.getElementById('numSelect')?.value;
     const bins = document.getElementById('bins')?.value || 15;
@@ -120,7 +113,6 @@
     drawChart(ctx, 'bar', data.labels, data.values, `Frecuencia: ${col}`);
   });
 
-  // Autodibujar en carga (si hay columnas)
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnHist')?.click();
     document.getElementById('btnCounts')?.click();
