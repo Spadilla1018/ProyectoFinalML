@@ -71,19 +71,120 @@
   </section>
 </div>
 
+<!-- ====== ML: Entrenamiento / Métricas / Runs ====== -->
+<div class="mt-8 grid lg:grid-cols-3 gap-6">
+  <section class="rounded-2xl glass p-5 shadow-soft">
+    <h2 class="font-semibold mb-3 flex items-center gap-2"><i class="ti ti-brain"></i> Modelo ML · Estudio de Negocios</h2>
+
+    <div class="space-y-4 text-sm">
+      <div>
+        <label class="block mb-1 font-medium">Objetivo (y)</label>
+        <select id="targetSelect" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+          {% for c in all_cols %}
+            <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-1 font-medium">Variables (X)</label>
+        <div class="rounded-lg border p-2 max-h-40 overflow-auto border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+          {% for c in all_cols %}
+            <label class="flex items-center gap-2 py-0.5">
+              <input type="checkbox" class="feat" value="{{ c }}"> <span>{{ c }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <p class="text-xs mt-1 text-slate-500">Si no seleccionas, se usarán todas menos la objetivo.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block mb-1 font-medium">Tarea</label>
+          <select id="taskSelect" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <option value="">Inferir automáticamente</option>
+            <option value="classification">Clasificación</option>
+            <option value="regression">Regresión</option>
+          </select>
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Algoritmo</label>
+          <select id="algoSelect" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+            <option value="rf">Random Forest</option>
+            <option value="logreg">Regresión Logística (clasif.)</option>
+            <option value="linreg">Regresión Lineal (regr.)</option>
+            <option value="knn">KNN</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block mb-1 font-medium">Test size</label>
+          <input id="testSize" type="number" step="0.01" value="0.2" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+        </div>
+        <div>
+          <label class="block mb-1 font-medium">Random state</label>
+          <input id="randState" type="number" value="42" class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+        </div>
+      </div>
+
+      <button id="btnTrain" class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 w-full">
+        Entrenar modelo
+      </button>
+    </div>
+  </section>
+
+  <section class="rounded-2xl glass p-5 shadow-soft lg:col-span-2">
+    <h3 class="font-semibold mb-3">Métricas</h3>
+    <pre id="metricsBox" class="text-xs bg-white/70 dark:bg-slate-900/50 rounded-xl p-3 overflow-auto">—</pre>
+
+    <div id="cmWrap" class="rounded-2xl glass p-5 shadow-soft mt-4 hidden">
+      <h3 class="font-semibold mb-3">Matriz de confusión</h3>
+      <div class="relative h-[260px]"><canvas id="cmCanvas"></canvas></div>
+    </div>
+
+    <div id="downloadWrap" class="mt-4 hidden">
+      <a id="downloadLink" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">
+        <i class="ti ti-download"></i> Descargar modelo
+      </a>
+    </div>
+
+    <hr class="my-5 border-white/60 dark:border-white/10">
+
+    <h3 class="font-semibold mb-3">Historial de modelos</h3>
+    <div class="overflow-x-auto rounded-xl border border-white/60 dark:border-white/10">
+      <table class="min-w-full text-sm">
+        <thead class="bg-white/70 dark:bg-slate-900/40">
+          <tr class="text-left text-slate-600 dark:text-slate-300">
+            <th class="py-2 px-3">Fecha</th>
+            <th class="py-2 px-3">Tarea</th>
+            <th class="py-2 px-3">Algoritmo</th>
+            <th class="py-2 px-3">Objetivo</th>
+            <th class="py-2 px-3">Features</th>
+            <th class="py-2 px-3">Descargar</th>
+            <th class="py-2 px-3">Usar modelo</th>
+          </tr>
+        </thead>
+        <tbody id="runsBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
 <script>
   let histChart = null;
   let barChart = null;
+  let cmChart = null;
 
-  async function fetchJSON(url) {
-    const r = await fetch(url);
+  async function fetchJSON(url, opts) {
+    const r = await fetch(url, opts);
     return await r.json();
   }
 
   function drawChart(ctx, type, labels, values, title) {
     if (type === 'bar' && barChart) { barChart.destroy(); }
     if (type === 'hist' && histChart) { histChart.destroy(); }
-
     const data = { labels, datasets: [{ label: title, data: values }] };
     const options = {
       responsive: true, maintainAspectRatio: false,
@@ -93,6 +194,21 @@
     const chartType = (type === 'hist') ? 'bar' : type;
     const chart = new Chart(ctx, { type: chartType, data, options });
     if (type === 'hist') histChart = chart; else barChart = chart;
+  }
+
+  function drawConfusion(cm) {
+    if (cmChart) cmChart.destroy();
+    const labels = cm.map((_, i) => `Pred ${i}`);
+    const datasets = cm.map((row, i) => ({
+      label: `Real ${i}`,
+      data: row
+    }));
+    const ctx = document.getElementById('cmCanvas').getContext('2d');
+    cmChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: { responsive: true, maintainAspectRatio: false, scales:{x:{stacked:true}, y:{stacked:true}} }
+    });
   }
 
   document.getElementById('btnHist')?.addEventListener('click', async () => {
@@ -114,9 +230,79 @@
     drawChart(ctx, 'bar', data.labels, data.values, `Frecuencia: ${col}`);
   });
 
+  async function loadRuns() {
+    const body = document.getElementById('runsBody');
+    body.innerHTML = '<tr><td class="py-3 px-3 text-slate-500" colspan="7">Cargando…</td></tr>';
+    const runs = await fetchJSON('/api/ml/runs');
+    if (!runs || !runs.length) {
+      body.innerHTML = '<tr><td class="py-3 px-3 text-slate-500" colspan="7">Sin modelos aún.</td></tr>';
+      return;
+    }
+    let html = '';
+    for (const r of runs) {
+      const predictUrl = `/predict/${r.id}`;
+      html += `
+        <tr class="border-t border-white/60 dark:border-white/10">
+          <td class="py-2 px-3">${r.created_at}</td>
+          <td class="py-2 px-3">${r.task}</td>
+          <td class="py-2 px-3">${r.algorithm}</td>
+          <td class="py-2 px-3">${r.target}</td>
+          <td class="py-2 px-3">${r.features.join(', ')}</td>
+          <td class="py-2 px-3"><a href="${r.download}" class="px-2 py-1 rounded bg-slate-900 text-white hover:bg-slate-800">Descargar</a></td>
+          <td class="py-2 px-3"><a href="${predictUrl}" class="px-2 py-1 rounded bg-brand-600 text-white hover:bg-brand-700">Usar modelo</a></td>
+        </tr>`;
+    }
+    body.innerHTML = html;
+  }
+
+  async function trainModel() {
+    const target = document.getElementById('targetSelect').value;
+    const task = document.getElementById('taskSelect').value;
+    const algo = document.getElementById('algoSelect').value;
+    const testSize = parseFloat(document.getElementById('testSize').value || '0.2');
+    const randState = parseInt(document.getElementById('randState').value || '42', 10);
+    const features = Array.from(document.querySelectorAll('.feat:checked')).map(el => el.value);
+
+    const payload = { target, features, algorithm: algo, task, test_size: testSize, random_state: randState };
+    const res = await fetchJSON('/api/ml/train', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+
+    const box = document.getElementById('metricsBox');
+    const dlWrap = document.getElementById('downloadWrap');
+    const dl = document.getElementById('downloadLink');
+    const cmWrap = document.getElementById('cmWrap');
+
+    if (res.error) {
+      box.textContent = 'Error: ' + res.error;
+      dlWrap.classList.add('hidden');
+      cmWrap.classList.add('hidden');
+      return;
+    }
+    box.textContent = JSON.stringify(res.metrics, null, 2);
+    if (res.model_download) {
+      dl.href = res.model_download;
+      dlWrap.classList.remove('hidden');
+    } else {
+      dlWrap.classList.add('hidden');
+    }
+    if (res.metrics && res.metrics.confusion_matrix) {
+      cmWrap.classList.remove('hidden');
+      drawConfusion(res.metrics.confusion_matrix);
+    } else {
+      cmWrap.classList.add('hidden');
+    }
+    loadRuns();
+  }
+
+  document.getElementById('btnTrain')?.addEventListener('click', trainModel);
+
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnHist')?.click();
     document.getElementById('btnCounts')?.click();
+    loadRuns();
   });
 </script>
 {% endblock %}

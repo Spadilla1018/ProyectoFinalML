@@ -1,0 +1,11 @@
+﻿DiaFermentacion,Temperatura_C,PH,GravedadEspecifica,TiempoFermentacion_dias,MetodoDesalcoholizacion,SaborIntensidad,Color,EspumaEstabilidad
+1,18.5,4.5,1.045,1,agente_natural,7,Ámbar,Media
+3,19.0,4.4,1.04,3,agente_natural,8,Ámbar,Alta
+5,20.0,4.3,1.035,5,vacio,7,Roja,Alta
+7,21.0,4.2,1.03,7,membrana,6,Roja,Media
+10,22.5,4.1,1.02,10,agente_natural,8,Ámbar,Alta
+12,23.0,4.0,1.015,12,vacio,9,Ámbar,Alta
+14,23.5,3.9,1.01,14,membrana,8,Roja,Alta
+16,24.0,3.8,1.008,16,agente_natural,7,Ámbar,Baja
+18,24.5,3.8,1.007,18,vacio,8,Roja,Media
+20,25.0,3.7,1.006,20,membrana,9,Ámbar,Alta

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto glass rounded-2xl p-6 shadow-soft">
+  <h1 class="text-2xl md:text-3xl font-bold mb-2">Predicción — Modelo #{{ run.id }}</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+    {{ run.task }} · {{ run.algorithm }} · objetivo: <strong>{{ run.target }}</strong>
+  </p>
+
+  <form method="post" class="grid md:grid-cols-2 gap-4">
+    {% for f in features %}
+      <div>
+        <label class="block text-sm font-medium mb-1">{{ f }}</label>
+        {% if schema.get(f) == 'number' %}
+          <input name="{{ f }}" type="number" step="any"
+                 value="{{ input_values[f] if input_values else '' }}"
+                 class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2">
+        {% else %}
+          <input name="{{ f }}" type="text"
+                 value="{{ input_values[f] if input_values else '' }}"
+                 class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2">
+        {% endif %}
+      </div>
+    {% endfor %}
+    <div class="md:col-span-2">
+      <button class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">
+        Predecir
+      </button>
+      <a href="{{ url_for('entendimiento') }}" class="ml-2 text-sm underline">Volver a Entendimiento</a>
+    </div>
+  </form>
+
+  {% if prediction is defined %}
+    <hr class="my-5 border-white/60 dark:border-white/10">
+    <div class="rounded-xl p-4 bg-white/70 dark:bg-slate-900/50">
+      <h3 class="font-semibold mb-2">Resultado</h3>
+      <p class="text-lg">Predicción: <strong>{{ prediction }}</strong></p>
+      {% if proba %}
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          Probabilidades (si aplica): {{ proba }}
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

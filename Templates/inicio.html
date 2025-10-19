@@ -15,16 +15,38 @@
       de fresa y mora. Explora los lotes, registra lecturas y conoce nuestro producto.
     </p>
 
-    <div class="mt-6 flex gap-3">
-      <a href="{{ url_for('producto') }}" class="px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 flex items-center gap-2">
-        <i class="ti ti-info-circle"></i> Ver Producto
-      </a>
-      {% if current_user.is_authenticated %}
-      <a href="{{ url_for('batches_list') }}" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-2">
-        <i class="ti ti-barrel"></i> Lotes
-      </a>
+    {% if current_user.is_authenticated %}
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="mt-6 space-y-3">
+      <label class="block text-sm font-medium">Subir dataset (.csv)</label>
+      <input type="file" name="file" accept=".csv" required
+             class="w-full rounded-lg border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900">
+      <div class="flex gap-3">
+        <button class="px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700 flex items-center gap-2">
+          <i class="ti ti-upload"></i> Cargar CSV
+        </button>
+        {% if filename %}
+          <a href="{{ url_for('entendimiento') }}" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-2">
+            <i class="ti ti-chart-histogram"></i> Ir a Entendimiento
+          </a>
+        {% endif %}
+      </div>
+      {% if filename %}
+        <p class="text-xs text-slate-500 dark:text-slate-400">Actual: <strong>{{ filename }}</strong></p>
       {% endif %}
-    </div>
+    </form>
+    {% else %}
+      <div class="mt-6 flex gap-3">
+        <a href="{{ url_for('login') }}" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-2">
+          <i class="ti ti-login"></i> Iniciar sesión
+        </a>
+        <a href="{{ url_for('register') }}" class="px-5 py-2.5 rounded-xl hover:bg-white/60 dark:hover:bg-slate-800 flex items-center gap-2">
+          <i class="ti ti-user-plus"></i> Crear cuenta
+        </a>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+        Debes iniciar sesión para subir el CSV.
+      </p>
+    {% endif %}
   </section>
 
   <section class="rounded-2xl glass p-6 shadow-soft">
@@ -33,40 +55,23 @@
     </h3>
     <div class="grid grid-cols-3 gap-3">
       {% set beer_path = url_for('static', filename='img/beer_hero.jpg') %}
-      {% set strawberry_path = url_for('static', filename='img/strawberry.jpg') %}
-      {% set blackberry_path = url_for('static', filename='img/blackberry.jpg') %}
-
       <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
         <img src="{{ beer_path }}" loading="lazy" alt="Cerveza artesanal"
              onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
         <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
       </div>
-
       <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-  <img src="{{ url_for('static', filename='img/fresas.jpg') }}" 
-       loading="lazy" 
-       alt="Fresas"
-       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
-       class="h-full w-full object-cover">
-  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
-</div>
-
-
+        <img src="{{ url_for('static', filename='img/fresas.jpg') }}" loading="lazy" alt="Fresas"
+             onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
+        <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+      </div>
       <div class="rounded-xl h-28 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-  <img src="{{ url_for('static', filename='img/moras.png') }}" 
-       loading="lazy" 
-       alt="Moras"
-       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
-       class="h-full w-full object-cover">
-  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
-</div>
-
+        <img src="{{ url_for('static', filename='img/moras.png') }}" loading="lazy" alt="Moras"
+             onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
+        <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+      </div>
     </div>
-    <style>
-      /* Si no hay imagen, mostramos un placeholder sin ir a internet */
-      .placeholder { display: grid !important; }
-      .placeholder > div { display: grid !important; }
-    </style>
+    <style>.placeholder { display: grid !important; } .placeholder > div { display: grid !important; }</style>
     <p class="text-sm text-slate-600 dark:text-slate-300 mt-3">
       Fermentación controlada (14 días) y des-alcoholización durante ese periodo para preservar el perfil sensorial.
     </p>

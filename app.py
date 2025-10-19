@@ -18,6 +18,7 @@ import enum
 import pymysql
 import os
 import io
+import json
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -33,14 +34,30 @@ from reportlab.lib.utils import ImageReader
 # ---- QR
 import qrcode
 
+# ---- ML
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
+from sklearn.metrics import (
+    r2_score, mean_absolute_error, mean_squared_error,
+    accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+)
+import joblib
+
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 IMG_DIR = os.path.join(STATIC_DIR, "img")
+MODELS_DIR = os.path.join(UPLOAD_DIR, "models")
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
-app.secret_key = "cambia-esta-clave-por-una-bien-larga-y-secreta"
+app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
 
 # Evitar cache de estáticos en dev (imágenes)
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
@@ -68,6 +85,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Dirs
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
+os.makedirs(MODELS_DIR, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
@@ -88,6 +106,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False, server_default='0')
     created_at = db.Column(db.DateTime, server_default=func.now())
+    runs = relationship("MLRun", back_populates="user")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -99,7 +118,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ----------------------------------
-# Modelos de producción
+# Entidades de producción (lotes) — compatibilidad
 # ----------------------------------
 class Flavor(db.Model):
     __tablename__ = "flavors"
@@ -157,15 +176,88 @@ class DeAlcoholizationStep(db.Model):
     batch = relationship("Batch", back_populates="dealc_steps")
 
 # ----------------------------------
+# Registro de corridas ML
+# ----------------------------------
+class MLRun(db.Model):
+    __tablename__ = "ml_runs"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    filename = db.Column(db.String(255), nullable=True)
+    task = db.Column(db.String(32), nullable=False)  # 'classification' | 'regression'
+    algorithm = db.Column(db.String(64), nullable=False)
+    target = db.Column(db.String(255), nullable=False)
+    features_json = db.Column(db.Text, nullable=False)
+    metrics_json = db.Column(db.Text, nullable=False)
+    schema_json = db.Column(db.Text, nullable=True)  # tipos de features
+    model_path = db.Column(db.String(512), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    user = relationship("User", back_populates="runs")
+
+# ----------------------------------
 # Helpers
 # ----------------------------------
-def plato_from_sg(sg: float|None):
-    if not sg: return None
-    return (-616.868) + 1111.14*sg - 630.272*(sg**2) + 135.997*(sg**3)
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"csv"}
 
-def abv_estimate(og: float|None, fg: float|None):
-    if not og or not fg: return None
-    return max(0.0, (og - fg) * 131.25)
+def split_columns(df: pd.DataFrame):
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    categorical_cols = [c for c in df.columns if c not in numeric_cols]
+    default_numeric = numeric_cols[0] if numeric_cols else None
+    default_categorical = categorical_cols[0] if categorical_cols else None
+    return numeric_cols, categorical_cols, default_numeric, default_categorical
+
+def infer_task_from_target(series: pd.Series) -> str:
+    if pd.api.types.is_numeric_dtype(series):
+        nunique = series.dropna().nunique()
+        return "regression" if nunique > 10 else "classification"
+    return "classification"
+
+def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
+    num_cols = X.select_dtypes(include=[np.number]).columns.tolist()
+    cat_cols = [c for c in X.columns if c not in num_cols]
+
+    numeric_processor = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler())
+    ])
+    categorical_processor = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("ohe", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+    ])
+
+    pre = ColumnTransformer(
+        transformers=[
+            ("num", numeric_processor, num_cols),
+            ("cat", categorical_processor, cat_cols)
+        ]
+    )
+
+    if task == "regression":
+        if algorithm == "linreg":
+            model = LinearRegression()
+        elif algorithm == "rf":
+            model = RandomForestRegressor(n_estimators=300, random_state=42)
+        elif algorithm == "knn":
+            model = KNeighborsRegressor(n_neighbors=5)
+        else:
+            raise ValueError("Algoritmo de regresión no soportado.")
+    else:
+        if algorithm == "logreg":
+            model = LogisticRegression(max_iter=300)
+        elif algorithm == "rf":
+            model = RandomForestClassifier(n_estimators=300, random_state=42)
+        elif algorithm == "knn":
+            model = KNeighborsClassifier(n_neighbors=5)
+        else:
+            raise ValueError("Algoritmo de clasificación no soportado.")
+
+    return Pipeline(steps=[("pre", pre), ("model", model)])
+
+# ----------------------------------
+# Estado en memoria del dataset
+# ----------------------------------
+CURRENT_DF = None
+CURRENT_FILENAME = None
 
 # ----------------------------------
 # Bootstrap DB + seed
@@ -173,6 +265,8 @@ def abv_estimate(og: float|None, fg: float|None):
 with app.app_context():
     db.create_all()
     insp = inspect(db.engine)
+
+    # users table hardenings
     cols = [c['name'] for c in insp.get_columns('users')]
     if 'is_admin' not in cols:
         db.session.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0;"))
@@ -189,6 +283,15 @@ with app.app_context():
         db.session.add(Flavor(name="Fresa & Mora"))
         db.session.commit()
 
+    # ml_runs schema_json
+    ml_cols = [c['name'] for c in insp.get_columns('ml_runs')]
+    if 'schema_json' not in ml_cols:
+        db.session.execute(text("ALTER TABLE ml_runs ADD COLUMN schema_json TEXT NULL;"))
+        db.session.commit()
+
+# ----------------------------------
+# Decoradores
+# ----------------------------------
 def admin_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -196,22 +299,6 @@ def admin_required(f):
             abort(403)
         return f(*args, **kwargs)
     return wrapper
-
-# ----------------------------------
-# Entendimiento (estado en memoria)
-# ----------------------------------
-CURRENT_DF = None
-CURRENT_FILENAME = None
-
-def allowed_file(filename: str) -> bool:
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"csv"}
-
-def split_columns(df: pd.DataFrame):
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    categorical_cols = [c for c in df.columns if c not in numeric_cols]
-    default_numeric = numeric_cols[0] if numeric_cols else None
-    default_categorical = categorical_cols[0] if categorical_cols else None
-    return numeric_cols, categorical_cols, default_numeric, default_categorical
 
 # ----------------------------------
 # Auth routes
@@ -280,7 +367,7 @@ def admin_users_create():
     return redirect(url_for("admin_users"))
 
 # ----------------------------------
-# Rutas principales + Entendimiento
+# Rutas principales + EDA
 # ----------------------------------
 @app.get("/")
 def index():
@@ -315,11 +402,13 @@ def entendimiento():
     if CURRENT_DF is None:
         flash("No hay dataset cargado actualmente.", "warning"); return redirect(url_for("index"))
     numeric_cols, categorical_cols, dnum, dcat = split_columns(CURRENT_DF)
+    all_cols = CURRENT_DF.columns.tolist()
     return render_template("entendimiento.html",
         title="Entendimiento de Datos",
         filename=CURRENT_FILENAME,
         numeric_cols=numeric_cols,
         categorical_cols=categorical_cols,
+        all_cols=all_cols,
         default_numeric=dnum,
         default_categorical=dcat)
 
@@ -362,6 +451,14 @@ def plot_corr():
 # ----------------------------------
 # Lotes / Lecturas / Des-alcoholización
 # ----------------------------------
+def plato_from_sg(sg: float|None):
+    if not sg: return None
+    return (-616.868) + 1111.14*sg - 630.272*(sg**2) + 135.997*(sg**3)
+
+def abv_estimate(og: float|None, fg: float|None):
+    if not og or not fg: return None
+    return max(0.0, (og - fg) * 131.25)
+
 @app.get("/batches")
 @login_required
 def batches_list():
@@ -384,7 +481,8 @@ def batches_create():
     if Batch.query.filter_by(code=code).first():
         flash("Ese código de lote ya existe.", "danger"); return redirect(url_for("batches_list"))
     start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-    b = Batch(code=code, flavor_id=flavor_id, start_date=start_dt, target_days=target_days, volume_l=volume_l, yeast=yeast, notes=notes)
+    b = Batch(code=code, flavor_id=flavor_id, start_date=start_dt, target_days=target_days,
+              volume_l=volume_l, yeast=yeast, notes=notes)
     db.session.add(b); db.session.commit(); flash("Lote creado.", "success")
     return redirect(url_for("batch_detail", batch_id=b.id))
 
@@ -440,8 +538,243 @@ def api_batch_series(batch_id):
         "abv": abv_curve, "target_days": b.target_days, "start_date": b.start_date.strftime("%Y-%m-%d")
     })
 
+# ---------- subir CSV de lecturas (usado en batch_detail.html) ----------
+@app.post("/batches/<int:batch_id>/readings/upload")
+@login_required
+def readings_upload(batch_id):
+    from csv import DictReader
+    b = Batch.query.get_or_404(batch_id)
+    f = request.files.get("file")
+    if not f or f.filename == "":
+        flash("Selecciona un CSV con columnas: ts,temp_c,sg,ph", "warning")
+        return redirect(url_for("batch_detail", batch_id=b.id))
+    try:
+        tmp_path = os.path.join(UPLOAD_DIR, f"readings_{b.id}_{int(datetime.utcnow().timestamp())}.csv")
+        f.save(tmp_path)
+        with open(tmp_path, "r", encoding="utf-8") as fh:
+            dr = DictReader(fh)
+            req_cols = {"ts","temp_c","sg","ph"}
+            if not req_cols.issubset(set(dr.fieldnames or [])):
+                flash("El CSV debe tener columnas: ts,temp_c,sg,ph", "danger")
+                return redirect(url_for("batch_detail", batch_id=b.id))
+            added = 0
+            for row in dr:
+                ts = datetime.fromisoformat(row["ts"])
+                temp = float(row["temp_c"]) if row["temp_c"] else None
+                sg = float(row["sg"]) if row["sg"] else None
+                ph = float(row["ph"]) if row["ph"] else None
+                fr = FermentationReading(batch_id=b.id, ts=ts, temp_c=temp, sg=sg, ph=ph)
+                db.session.add(fr); added += 1
+            db.session.commit()
+        os.remove(tmp_path)
+        flash(f"{added} lecturas importadas.", "success")
+    except Exception as e:
+        flash(f"Error importando CSV: {e}", "danger")
+    return redirect(url_for("batch_detail", batch_id=b.id))
+
 # ----------------------------------
-# Páginas públicas: Producto + PDFs
+# API de entrenamiento ML
+# ----------------------------------
+@app.post("/api/ml/train")
+@login_required
+def api_ml_train():
+    global CURRENT_DF, CURRENT_FILENAME
+    if CURRENT_DF is None:
+        return jsonify({"error": "No hay dataset cargado."}), 400
+
+    try:
+        payload = request.get_json(force=True)
+        target = payload.get("target")
+        features = payload.get("features", [])
+        algorithm = payload.get("algorithm")  # 'linreg'|'logreg'|'rf'|'knn'
+        task = payload.get("task")           # 'classification'|'regression'|None
+        test_size = float(payload.get("test_size", 0.2))
+        random_state = int(payload.get("random_state", 42))
+
+        if not target or target not in CURRENT_DF.columns:
+            return jsonify({"error": "Debes indicar una columna objetivo válida."}), 400
+        if not features:
+            features = [c for c in CURRENT_DF.columns if c != target]
+        for f in features:
+            if f not in CURRENT_DF.columns:
+                return jsonify({"error": f"Columna de feature no existe: {f}"}), 400
+        if algorithm not in {"linreg","logreg","rf","knn"}:
+            return jsonify({"error": "Algoritmo no soportado."}), 400
+
+        df = CURRENT_DF.copy()
+        y = df[target]
+        X = df[features]
+
+        if not task:
+            task = infer_task_from_target(y)
+
+        if task == "classification":
+            if not pd.api.types.is_numeric_dtype(y):
+                y = y.astype(str)
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state, stratify=y if task=="classification" else None
+        )
+
+        if task == "regression" and algorithm == "logreg":
+            return jsonify({"error": "Regresión logística es para clasificación."}), 400
+        if task == "classification" and algorithm == "linreg":
+            return jsonify({"error": "Regresión lineal es para regresión."}), 400
+
+        pipe = build_pipeline(task, algorithm, X_train)
+        pipe.fit(X_train, y_train)
+
+        y_pred = pipe.predict(X_test)
+        metrics = {}
+        if task == "regression":
+            mae = mean_absolute_error(y_test, y_pred)
+            mse = mean_squared_error(y_test, y_pred)
+            rmse = float(np.sqrt(mse))
+            r2 = r2_score(y_test, y_pred)
+            metrics = {"MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2}
+        else:
+            acc = accuracy_score(y_test, y_pred)
+            prec = precision_score(y_test, y_pred, average="macro", zero_division=0)
+            rec = recall_score(y_test, y_pred, average="macro", zero_division=0)
+            f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
+            cm = confusion_matrix(y_test, y_pred).tolist()
+            metrics = {"accuracy": acc, "precision_macro": prec, "recall_macro": rec, "f1_macro": f1, "confusion_matrix": cm}
+
+        # Construir esquema simple para predicción
+        schema = {}
+        for c in features:
+            if pd.api.types.is_numeric_dtype(X[c]):
+                schema[c] = "number"
+            else:
+                schema[c] = "string"
+
+        run = MLRun(
+            user_id=getattr(current_user, "id", None),
+            filename=CURRENT_FILENAME or "",
+            task=task,
+            algorithm=algorithm,
+            target=target,
+            features_json=json.dumps(features),
+            metrics_json=json.dumps(metrics),
+            schema_json=json.dumps(schema),
+            model_path=""
+        )
+        db.session.add(run); db.session.commit()
+
+        model_path = os.path.join(MODELS_DIR, f"run_{run.id}.joblib")
+        joblib.dump(pipe, model_path)
+        run.model_path = model_path
+        db.session.commit()
+
+        return jsonify({
+            "ok": True,
+            "run_id": run.id,
+            "task": task,
+            "algorithm": algorithm,
+            "target": target,
+            "features": features,
+            "metrics": metrics,
+            "model_download": url_for("download_model", run_id=run.id)
+        })
+    except Exception as e:
+        return jsonify({"error": f"Fallo entrenando el modelo: {str(e)}"}), 500
+
+@app.get("/api/ml/runs")
+@login_required
+def api_ml_runs():
+    q = MLRun.query
+    if not getattr(current_user, "is_admin", False):
+        q = q.filter((MLRun.user_id == current_user.id) | (MLRun.user_id.is_(None)))
+    runs = q.order_by(MLRun.id.desc()).limit(50).all()
+    data = []
+    for r in runs:
+        data.append({
+            "id": r.id,
+            "created_at": r.created_at.strftime("%Y-%m-%d %H:%M"),
+            "filename": r.filename,
+            "task": r.task,
+            "algorithm": r.algorithm,
+            "target": r.target,
+            "features": json.loads(r.features_json),
+            "metrics": json.loads(r.metrics_json),
+            "download": url_for("download_model", run_id=r.id)
+        })
+    return jsonify(data)
+
+@app.get("/download/model/<int:run_id>")
+@login_required
+def download_model(run_id):
+    r = MLRun.query.get_or_404(run_id)
+    if not os.path.exists(r.model_path):
+        flash("Archivo de modelo no encontrado.", "danger")
+        return redirect(url_for("entendimiento"))
+    fname = f"modelo_{r.task}_{r.algorithm}_run{r.id}.joblib"
+    return send_file(r.model_path, as_attachment=True, download_name=fname)
+
+# ----------------------------------
+# Predicción en línea
+# ----------------------------------
+@app.get("/predict/<int:run_id>")
+@login_required
+def predict_form(run_id):
+    r = MLRun.query.get_or_404(run_id)
+    if not os.path.exists(r.model_path):
+        flash("Archivo de modelo no encontrado.", "danger")
+        return redirect(url_for("entendimiento"))
+    features = json.loads(r.features_json)
+    schema = json.loads(r.schema_json or "{}")
+    return render_template("predict.html",
+                           title=f"Predecir · Modelo {r.id}",
+                           run=r,
+                           features=features,
+                           schema=schema)
+
+@app.post("/predict/<int:run_id>")
+@login_required
+def predict_submit(run_id):
+    r = MLRun.query.get_or_404(run_id)
+    if not os.path.exists(r.model_path):
+        flash("Archivo de modelo no encontrado.", "danger")
+        return redirect(url_for("entendimiento"))
+
+    features = json.loads(r.features_json)
+    schema = json.loads(r.schema_json or "{}")
+
+    row = {}
+    for f in features:
+        val = request.form.get(f, "")
+        if schema.get(f) == "number":
+            try:
+                row[f] = float(val) if val != "" else np.nan
+            except ValueError:
+                row[f] = np.nan
+        else:
+            row[f] = val
+
+    X_infer = pd.DataFrame([row], columns=features)
+    pipe = joblib.load(r.model_path)
+    try:
+        y_pred = pipe.predict(X_infer)
+        y_proba = None
+        try:
+            y_proba = pipe.predict_proba(X_infer)[0].tolist()
+        except Exception:
+            pass
+
+        return render_template("predict.html",
+                               title=f"Predecir · Modelo {r.id}",
+                               run=r,
+                               features=features,
+                               schema=schema,
+                               input_values=row,
+                               prediction=y_pred[0],
+                               proba=y_proba)
+    except Exception as e:
+        flash(f"Error al predecir: {e}", "danger")
+        return redirect(url_for("predict_form", run_id=r.id))
+
+# ----------------------------------
+# Páginas públicas (Producto + PDFs)
 # ----------------------------------
 @app.get("/producto")
 def producto():
@@ -449,13 +782,11 @@ def producto():
 
 @app.get("/producto/folleto")
 def producto_folleto():
-    """Folleto PDF: logos, objetivo, proceso, nutricional y QR a /producto."""
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
     margin = 36; x = margin; y = height - margin
 
-    # Logos
     udec_path = os.path.join(IMG_DIR, "udec_logo.png")
     loja_path = os.path.join(IMG_DIR, "loja_logo.png")
     logo_h = 50
@@ -505,7 +836,6 @@ def producto_folleto():
         c.setFillColor(colors.black); c.drawString(table_x + 6, y_cursor + 5, label); c.drawString(table_x + col1_w + 6, y_cursor + 5, value)
     y = y_cursor - 24
 
-    # QR a /producto
     try:
         producto_url = request.url_root.rstrip("/") + url_for("producto")
         qr_img = qrcode.make(producto_url); qr_buf = io.BytesIO(); qr_img.save(qr_buf, format="PNG"); qr_buf.seek(0)
@@ -522,13 +852,11 @@ def producto_folleto():
 
 @app.get("/producto/ficha")
 def producto_ficha():
-    """Ficha técnica PDF: especificaciones de proceso, rangos, QA, envasado + QR a esta ficha."""
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
     margin = 36; x = margin; y = height - margin
 
-    # Logos
     udec_path = os.path.join(IMG_DIR, "udec_logo.png")
     loja_path = os.path.join(IMG_DIR, "loja_logo.png")
     logo_h = 50
@@ -540,14 +868,12 @@ def producto_ficha():
     except Exception: pass
     y -= (logo_h + 16)
 
-    # Título
     c.setFillColor(colors.HexColor("#0f766e")); c.setFont("Helvetica-Bold", 18)
     c.drawString(x, y, "Ficha Técnica — Cerveza 0.0% Fresa & Mora"); y -= 22
     c.setFillColor(colors.black); c.setFont("Helvetica", 10)
     c.drawString(x, y, f"Fecha de emisión: {datetime.now().strftime('%Y-%m-%d')}"); y -= 8
     c.drawString(x, y, "Versión: 1.0"); y -= 14
 
-    # Especificaciones de proceso
     c.setFont("Helvetica-Bold", 12); c.drawString(x, y, "1. Especificaciones de proceso"); y -= 16
     c.setFont("Helvetica", 10)
     specs = [
@@ -571,7 +897,6 @@ def producto_ficha():
         c.setFillColor(colors.black); c.drawString(table_x + 6, y_cursor + 5, k); c.drawString(table_x + col1_w + 6, y_cursor + 5, v)
     y = y_cursor - 18
 
-    # Ingredientes y alérgenos
     c.setFont("Helvetica-Bold", 12); c.drawString(x, y, "2. Ingredientes y alérgenos"); y -= 14
     c.setFont("Helvetica", 10)
     for line in [
@@ -580,7 +905,6 @@ def producto_ficha():
     ]:
         c.drawString(x, y, line); y -= 14
 
-    # Control de calidad (QA)
     y -= 2; c.setFont("Helvetica-Bold", 12); c.drawString(x, y, "3. Controles de calidad (QA)"); y -= 14
     c.setFont("Helvetica", 10)
     for line in [
@@ -591,7 +915,6 @@ def producto_ficha():
     ]:
         c.drawString(x, y, line); y -= 14
 
-    # Envasado / almacenamiento
     y -= 2; c.setFont("Helvetica-Bold", 12); c.drawString(x, y, "4. Envasado y almacenamiento"); y -= 14
     c.setFont("Helvetica", 10)
     for line in [
@@ -602,7 +925,6 @@ def producto_ficha():
     ]:
         c.drawString(x, y, line); y -= 14
 
-    # QR a esta ficha
     y -= 4
     try:
         ficha_url = request.url_root.rstrip("/") + url_for("producto_ficha")
@@ -613,7 +935,6 @@ def producto_ficha():
     except Exception:
         pass
 
-    # Pie
     c.setFillColor(colors.gray); c.setFont("Helvetica-Oblique", 9)
     c.drawString(x, 24, "Proyecto académico — Universidad de Cundinamarca & Universidad de Loja — 0.0% ABV")
     c.showPage(); c.save()
