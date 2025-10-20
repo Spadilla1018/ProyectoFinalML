@@ -1,75 +1,119 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-5xl mx-auto rounded-2xl glass p-6 shadow-soft">
-  <div class="flex items-center gap-3 mb-4">
-    <i class="ti ti-beer text-3xl text-brand-600"></i>
-    <h1 class="text-3xl font-bold">Cerveza Artesanal sin Alcohol · Fresa &amp; Mora</h1>
-  </div>
+<!-- Fondo general con degradado -->
+<section class="min-h-screen bg-gradient-to-br from-pink-50 via-rose-100 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-10">
 
-  <p class="text-lg text-slate-700 dark:text-slate-200 mb-4 leading-relaxed">
-    Elaborada con ingredientes seleccionados, frutas naturales y un cuidadoso control de fermentación de 2 semanas.
-    Aplicamos un proceso de des-alcoholización durante la fermentación para garantizar un ABV inferior al 0.5%,
-    manteniendo el cuerpo, aroma y frescura de una cerveza artesanal.
-  </p>
-
-  {% set beer_path = url_for('static', filename='img/beer_hero.jpg') %}
-  {% set strawberry_path = url_for('static', filename='img/strawberry.jpg') %}
-  {% set blackberry_path = url_for('static', filename='img/blackberry.jpg') %}
-
-  <div class="grid md:grid-cols-3 gap-4 my-6">
-    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-      <img src="{{ beer_path }}" loading="lazy" alt="Cerveza artesanal"
-           onerror="this.parentElement.classList.add('placeholder'); this.remove();" class="h-full w-full object-cover">
-      <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
+  <!-- Hero Section -->
+  <div class="relative max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-xl mb-14">
+    <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" 
+         alt="Cerveza artesanal sin alcohol Fresa y Mora" 
+         class="w-full h-96 object-cover brightness-75">
+    <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
+      <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-2xl">BerriBrew 0.0%</h1>
+      <p class="text-lg md:text-2xl mt-3 font-light">Cerveza artesanal sin alcohol · Fresa &amp; Mora</p>
     </div>
-    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-  <img src="{{ url_for('static', filename='img/fresas.jpg') }}" 
-       loading="lazy" 
-       alt="Fresas"
-       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
-       class="h-full w-full object-cover">
-  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
-</div>
+    <!-- Franja decorativa inferior -->
+    <div class="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-pink-600 via-rose-500 to-fuchsia-600"></div>
+  </div>
 
-    <div class="rounded-2xl h-48 w-full border border-white/60 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
-  <img src="{{ url_for('static', filename='img/moras.png') }}" 
-       loading="lazy" 
-       alt="Moras"
-       onerror="this.parentElement.classList.add('placeholder'); this.remove();" 
-       class="h-full w-full object-cover">
-  <div class="absolute inset-0 hidden place-items-center text-xs text-slate-500">Sin imagen</div>
-</div>
+  <!-- Descripción general -->
+  <div class="max-w-5xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-700 transition-all duration-500 hover:shadow-pink-300/40">
+    
+    <p class="text-lg text-slate-700 dark:text-slate-200 mb-8 leading-relaxed text-justify">
+      <span class="font-semibold text-pink-600">BerriBrew 0.0%</span> representa una nueva generación de cervezas artesanales, 
+      elaboradas con <span class="text-pink-500 font-medium">frutas naturales</span> y un control de fermentación preciso. 
+      Nuestro proceso único de <strong>des-alcoholización</strong> conserva la textura, cuerpo y aroma de la cerveza tradicional, 
+      garantizando una experiencia auténtica, refrescante y sofisticada con menos de <strong>0.5% ABV</strong>.
+    </p>
+
+    <!-- Galería -->
+    <div class="grid md:grid-cols-3 gap-6 my-10">
+      {% for item in [
+        {'img': 'img/beer_hero.jpg', 'alt': 'Cerveza base', 'label': 'Cerveza base'},
+        {'img': 'img/fresas.jpg', 'alt': 'Fresas frescas', 'label': 'Fresas frescas'},
+        {'img': 'img/moras.png', 'alt': 'Moras silvestres', 'label': 'Moras silvestres'}
+      ] %}
+      <div class="rounded-2xl overflow-hidden group relative shadow-lg hover:shadow-pink-300/50 transition-all duration-500">
+        <img src="{{ url_for('static', filename=item.img) }}" 
+             alt="{{ item.alt }}" 
+             class="h-56 w-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500">
+          <span class="text-white text-lg font-semibold tracking-wide">{{ item.label }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Objetivo -->
+    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-10 mb-3">🎯 Objetivo del Producto</h2>
+    <p class="text-slate-700 dark:text-slate-200 mb-6 leading-relaxed text-justify">
+      Ofrecer una <span class="font-medium text-pink-600">alternativa saludable y responsable</span> para quienes disfrutan del mundo cervecero 
+      sin consumir alcohol. Buscamos conservar la esencia artesanal, potenciar los sabores auténticos 
+      de la fresa y la mora, y garantizar un producto fresco, consistente y de calidad superior.
+    </p>
+
+    <!-- Proceso -->
+    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-8 mb-4">⚙️ Proceso de Elaboración</h2>
+    <ul class="list-disc pl-6 space-y-3 text-slate-700 dark:text-slate-200 leading-relaxed">
+      <li><strong>Fermentación controlada:</strong> dos semanas que desarrollan cuerpo, aroma y sabor natural.</li>
+      <li><strong>Des-alcoholización:</strong> técnica avanzada que elimina el alcohol sin alterar el perfil sensorial.</li>
+      <li><strong>Sabores naturales:</strong> fresa y mora auténticas, sin colorantes ni saborizantes artificiales.</li>
+    </ul>
+
+    <!-- Ficha de sabor -->
+    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-10 mb-5">🍓 Ficha de Sabor</h2>
+    <div class="overflow-hidden rounded-2xl border border-pink-200 dark:border-pink-800 bg-white/90 dark:bg-slate-800/70 shadow-inner">
+      <table class="w-full text-left text-slate-700 dark:text-slate-200">
+        <thead class="bg-gradient-to-r from-pink-600 via-rose-500 to-fuchsia-600 text-white">
+          <tr>
+            <th class="px-6 py-3">Atributo</th>
+            <th class="px-6 py-3">Descripción</th>
+            <th class="px-6 py-3 text-center">Nivel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in [
+            ['Dulzura','Equilibrada, con notas naturales de fresa madura.','⭐⭐⭐✰✰'],
+            ['Acidez','Refrescante, proveniente de las moras silvestres.','⭐⭐⭐⭐✰'],
+            ['Cuerpo','Ligero, con textura cremosa y final suave.','⭐⭐⭐✰✰'],
+            ['Aroma','Notas frutales intensas con toque floral.','⭐⭐⭐⭐⭐'],
+            ['Amargor','Suave y sutil, apenas perceptible para balancear el dulzor.','⭐⭐✰✰✰']
+          ] %}
+          <tr class="border-b border-pink-100 dark:border-slate-700">
+            <td class="px-6 py-4 font-medium">{{ row[0] }}</td>
+            <td class="px-6 py-4">{{ row[1] }}</td>
+            <td class="px-6 py-4 text-center">{{ row[2] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-10 flex flex-wrap gap-4 justify-center">
+      <a href="{{ url_for('producto_folleto') }}" 
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-700 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+        <i class="ti ti-file-type-pdf text-xl"></i> Descargar folleto PDF
+      </a>
+      <a href="{{ url_for('producto_ficha') }}" 
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+        <i class="ti ti-file-analytics text-xl"></i> Ficha técnica PDF
+      </a>
+      <a href="{{ url_for('index') }}" 
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+        <i class="ti ti-arrow-left text-xl"></i> Volver al Inicio
+      </a>
+    </div>
 
   </div>
-  <style>
-    .placeholder { display: grid !important; }
-    .placeholder > div { display: grid !important; }
-  </style>
-
-  <h2 class="text-2xl font-semibold mt-6 mb-3 text-brand-700 dark:text-brand-300">Objetivo del Producto</h2>
-  <p class="text-slate-700 dark:text-slate-200 mb-4">
-    Ofrecer una alternativa saludable y responsable para quienes disfrutan del mundo cervecero sin consumir alcohol.
-    Buscamos conservar la esencia artesanal, potenciar los sabores de fresa y mora, y garantizar un producto fresco,
-    consistente y de calidad.
-  </p>
-
-  <h2 class="text-2xl font-semibold mt-6 mb-3 text-brand-700 dark:text-brand-300">Proceso de Elaboración</h2>
-  <ul class="list-disc pl-6 space-y-2 text-slate-700 dark:text-slate-200">
-    <li><strong>Fermentación controlada:</strong> dos semanas para desarrollar cuerpo y sabor natural.</li>
-    <li><strong>Des-alcoholización:</strong> aplicación de un agente que elimina el alcohol sin afectar el perfil sensorial.</li>
-    <li><strong>Sabores naturales:</strong> fresa y mora auténticas, sin colorantes ni saborizantes artificiales.</li>
-  </ul>
-
-  <div class="mt-8 flex flex-wrap gap-3">
-    <a href="{{ url_for('producto_folleto') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 text-white hover:bg-brand-700">
-      <i class="ti ti-file-type-pdf"></i> Descargar folleto PDF
-    </a>
-    <a href="{{ url_for('producto_ficha') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 text-white hover:bg-emerald-800">
-      <i class="ti ti-file-analytics"></i> Ficha técnica PDF
-    </a>
-    <a href="{{ url_for('index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-      <i class="ti ti-arrow-left"></i> Volver al Inicio
-    </a>
-  </div>
-</div>
+</section>
 {% endblock %}
+  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-6">
+    {% for img in ['img/gallery1.jpg', 'img/gallery2.jpg', 'img/gallery3.jpg', 'img/gallery4.jpg', 'img/gallery5.jpg', 'img/gallery6.jpg'] %}
+    <div class="overflow-hidden rounded-2xl shadow-lg hover:shadow-pink-300/50 transition-all duration-500">
+      <img src="{{ url_for('static', filename=img) }}" 
+           alt="Galería BerriBrew" 
+           class="h-48 w-full object-cover hover:scale-110 transition-transform duration-700 ease-out">
+    </div>
+    {% endfor %}
+  </div>

@@ -1,21 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="max-w-md mx-auto glass rounded-2xl p-6 shadow-soft">
-  <h1 class="text-2xl font-bold mb-4">Crear cuenta</h1>
-  <form method="post" class="space-y-4">
-    <div>
-      <label class="block text-sm mb-1">Nombre</label>
-      <input name="name" required class="w-full rounded-lg border px-3 py-2">
+
+<!-- Fondo con degradado y centrado del formulario -->
+<section class="min-h-[80vh] flex items-center justify-center">
+  <div class="glass rounded-3xl shadow-xl max-w-md w-full p-8 border border-white/40 dark:border-slate-700 backdrop-blur-xl transition">
+    <div class="text-center mb-6">
+      <i class="ti ti-beer text-5xl text-brand-600"></i>
+      <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-3">Crear cuenta</h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400">
+        Únete a <span class="font-semibold text-brand-600">BerriBrew</span> · Fresa & Mora 0.0%
+      </p>
     </div>
-    <div>
-      <label class="block text-sm mb-1">Correo</label>
-      <input name="email" type="email" required class="w-full rounded-lg border px-3 py-2">
-    </div>
-    <div>
-      <label class="block text-sm mb-1">Contraseña</label>
-      <input name="password" type="password" required class="w-full rounded-lg border px-3 py-2">
-    </div>
-    <button class="px-4 py-2 rounded-lg bg-slate-900 text-white">Crear</button>
-  </form>
-</div>
+
+    <form method="post" class="space-y-5">
+      <!-- Nombre -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Nombre completo</label>
+        <div class="relative">
+          <i class="ti ti-user absolute left-3 top-2.5 text-slate-400"></i>
+          <input name="name" required
+            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+            placeholder="Tu nombre completo">
+        </div>
+      </div>
+
+      <!-- Correo -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Correo electrónico</label>
+        <div class="relative">
+          <i class="ti ti-mail absolute left-3 top-2.5 text-slate-400"></i>
+          <input name="email" type="email" required
+            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+            placeholder="correo@ejemplo.com">
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Contraseña</label>
+        <div class="relative">
+          <i class="ti ti-lock absolute left-3 top-2.5 text-slate-400"></i>
+          <input name="password" type="password" required
+            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+            placeholder="••••••••">
+        </div>
+      </div>
+
+      <!-- Botón -->
+      <button type="submit"
+        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+        <i class="ti ti-user-plus mr-1"></i> Crear cuenta
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+      ¿Ya tienes una cuenta?
+      <a href="{{ url_for('login') }}" class="text-brand-600 font-semibold hover:underline">Inicia sesión aquí</a>
+    </p>
+  </div>
+</section>
+
 {% endblock %}
