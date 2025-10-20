@@ -2,114 +2,213 @@
 {% block content %}
 
 <!-- Hero Section -->
-<section class="hero min-h-screen flex items-center justify-center text-center text-white relative bg-cover bg-center"
+<section class="hero min-h-screen flex items-center justify-center text-center text-white relative bg-cover bg-center overflow-hidden"
          style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ url_for('static', filename='img/beer_hero.jpg') }}');">
-  <div class="max-w-3xl px-6 animate__animated animate__fadeInUp">
-    <h1 class="text-5xl font-extrabold mb-4 text-pink-200 drop-shadow-lg">
-      Cerveza Artesanal de Fresa & Mora
+  <!-- Elemento decorativo adicional -->
+  <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-0"></div>
+  
+  <div class="max-w-3xl px-6 animate__animated animate__fadeInUp relative z-10">
+    <span class="inline-block px-4 py-1 bg-pink-600/80 backdrop-blur-sm rounded-full text-sm font-medium mb-4 text-white">
+      0.0% Alcohol · 100% Sabor
+    </span>
+    
+    <h1 class="text-5xl md:text-6xl font-extrabold mb-6 text-pink-200 drop-shadow-lg leading-tight">
+      Cerveza Artesanal<br><span class="text-white">de Fresa & Mora</span>
     </h1>
-    <p class="text-lg text-gray-200 mb-6">
+    
+    <p class="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
       Una experiencia única sin alcohol (0.0%) con notas naturales de fresa y mora. Elaborada con pasión y calidad.
     </p>
 
     {% if current_user.is_authenticated %}
-      <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data"
-            class="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-lg inline-block">
-        <label class="block text-sm mb-2 text-gray-200 font-medium">Subir dataset (.csv)</label>
-        <input type="file" name="file" accept=".csv" required
-               class="w-full text-sm bg-white/80 rounded-lg p-2 text-gray-800 mb-3">
-        <div class="flex flex-wrap justify-center gap-3">
-          <button class="px-6 py-2.5 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 text-white hover:opacity-90 transition flex items-center gap-2">
-            <i class="ti ti-upload"></i> Cargar CSV
-          </button>
+      <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-xl max-w-lg mx-auto">
+        <h3 class="text-xl font-semibold mb-4 text-white">Analiza tu dataset</h3>
+        
+        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="space-y-4">
+          <div class="text-left">
+            <label for="csv-file" class="block text-sm mb-2 text-gray-200 font-medium">Subir dataset (.csv)</label>
+            <div class="relative">
+              <input type="file" id="csv-file" name="file" accept=".csv" required
+                     class="w-full text-sm bg-white/80 rounded-lg p-3 text-gray-800 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer">
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap justify-center gap-3 pt-2">
+            <button type="submit" class="px-6 py-3 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 text-white hover:opacity-90 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg">
+              <i class="ti ti-upload"></i> Cargar CSV
+            </button>
+            
+            {% if filename %}
+              <a href="{{ url_for('entendimiento') }}"
+                 class="px-6 py-3 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 shadow-lg">
+                <i class="ti ti-chart-histogram"></i> Ver Entendimiento
+              </a>
+            {% endif %}
+          </div>
+          
           {% if filename %}
-            <a href="{{ url_for('entendimiento') }}"
-               class="px-6 py-2.5 rounded-full bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-2">
-              <i class="ti ti-chart-histogram"></i> Ver Entendimiento
-            </a>
+            <div class="mt-4 p-3 bg-green-500/20 backdrop-blur-sm rounded-lg border border-green-400/30">
+              <p class="text-xs text-gray-200">Archivo actual: <strong class="text-white">{{ filename }}</strong></p>
+            </div>
           {% endif %}
-        </div>
-        {% if filename %}
-          <p class="mt-3 text-xs text-gray-200">Archivo actual: <strong>{{ filename }}</strong></p>
-        {% endif %}
-      </form>
+        </form>
+      </div>
     {% else %}
       
-      <p class="mt-4 text-sm text-gray-300">Inicia sesión para poder subir tu archivo CSV.</p>
     {% endif %}
+  </div>
+  
+  <!-- Indicador de scroll -->
+  <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+    <i class="ti ti-chevron-down text-2xl text-white/70"></i>
   </div>
 </section>
 
 <!-- Features Section -->
-<section class="py-20 bg-white text-center">
-  <h2 class="text-4xl font-extrabold text-pink-700 mb-6">¿Por qué elegir nuestra cerveza?</h2>
-  <p class="text-slate-600 mb-12">Descubre lo que hace única nuestra BerriBrew 0.0%</p>
+<section class="py-20 md:py-28 bg-white relative">
+  <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-pink-50 to-transparent"></div>
+  
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="text-center max-w-3xl mx-auto mb-16">
 
-  <div class="grid md:grid-cols-3 gap-10 px-6 max-w-6xl mx-auto">
-    <div class="feature-card bg-white rounded-2xl p-8 shadow-md border-t-4 border-pink-500 hover:shadow-xl transition">
-      <i class="fas fa-leaf text-4xl text-pink-700 mb-4"></i>
-      <h3 class="text-2xl font-semibold mb-3 text-purple-800">Ingredientes Naturales</h3>
-      <p class="text-gray-600 text-sm">Fresas y moras seleccionadas cuidadosamente para garantizar frescura y sabor auténtico.</p>
+      <h2 class="text-4xl md:text-5xl font-extrabold text-pink-700 mb-6">¿Por qué elegir nuestra cerveza?</h2>
+      <p class="text-slate-600 text-lg">Descubre lo que hace única nuestra BerriBrew 0.0%</p>
     </div>
 
-    <div class="feature-card bg-white rounded-2xl p-8 shadow-md border-t-4 border-purple-600 hover:shadow-xl transition">
-      <i class="fas fa-hand-holding-heart text-4xl text-purple-700 mb-4"></i>
-      <h3 class="text-2xl font-semibold mb-3 text-pink-800">Elaboración Artesanal</h3>
-      <p class="text-gray-600 text-sm">Cada lote es elaborado manualmente con técnicas tradicionales y atención al detalle.</p>
-    </div>
+    <div class="grid md:grid-cols-3 gap-8 lg:gap-12">
+      <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-t-4 border-green-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group">
+        <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6 group-hover:bg-green-200 transition shadow-inner">
+          <i class="fa-solid fa-seedling text-3xl text-green-700"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-3 text-green-800">Ingredientes Naturales</h3>
+        <p class="text-gray-600">Fresas y moras seleccionadas cuidadosamente para garantizar frescura y sabor auténtico.</p>
+      </div>
 
-    <div class="feature-card bg-white rounded-2xl p-8 shadow-md border-t-4 border-pink-700 hover:shadow-xl transition">
-      <i class="fas fa-award text-4xl text-pink-600 mb-4"></i>
-      <h3 class="text-2xl font-semibold mb-3 text-purple-800">Sabor Excepcional</h3>
-      <p class="text-gray-600 text-sm">El balance ideal entre dulzura frutal y cuerpo cervecero. Sin alcohol, con todo el sabor.</p>
+      <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-t-4 border-fuchsia-600 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group">
+        <div class="w-16 h-16 rounded-full bg-fuchsia-100 flex items-center justify-center mb-6 group-hover:bg-fuchsia-200 transition shadow-inner">
+          <i class="fa-solid fa-beer-mug-empty text-3xl text-fuchsia-700"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-3 text-fuchsia-800">Elaboración Artesanal</h3>
+        <p class="text-gray-600">Cada lote es elaborado manualmente con técnicas tradicionales y atención al detalle.</p>
+      </div>
+
+      <div class="feature-card bg-white rounded-2xl p-8 shadow-lg border-t-4 border-pink-600 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 group">
+        <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center mb-6 group-hover:bg-pink-200 transition shadow-inner">
+          <i class="fa-solid fa-award text-3xl text-pink-700"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-3 text-pink-800">Sabor Excepcional</h3>
+        <p class="text-gray-600">El balance ideal entre dulzura frutal y cuerpo cervecero. Sin alcohol, con todo el sabor.</p>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- Gallery Section -->
-<section class="bg-gradient-to-r from-pink-100 to-purple-100 py-20">
-  <div class="max-w-5xl mx-auto text-center px-6">
-    <h2 class="text-4xl font-extrabold text-pink-800 mb-10">Sabores & Proceso</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="rounded-2xl overflow-hidden shadow-md hover:scale-105 transition">
-        <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" alt="Cerveza artesanal" class="w-full h-56 object-cover">
+<section class="bg-gradient-to-br from-pink-50 to-purple-100 py-20 md:py-28">
+  <div class="container mx-auto px-6">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+
+      <h2 class="text-4xl md:text-5xl font-extrabold text-pink-800 mb-6">Sabores & Proceso</h2>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
+        <div class="relative h-64 md:h-80">
+          <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" alt="Cerveza artesanal" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+            <p class="text-white font-medium">Cerveza Artesanal</p>
+          </div>
+        </div>
       </div>
-      <div class="rounded-2xl overflow-hidden shadow-md hover:scale-105 transition">
-        <img src="{{ url_for('static', filename='img/fresas.jpg') }}" alt="Fresas" class="w-full h-56 object-cover">
+      
+      <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
+        <div class="relative h-64 md:h-80">
+          <img src="{{ url_for('static', filename='img/fresas.jpg') }}" alt="Fresas" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+            <p class="text-white font-medium">Fresas Frescas</p>
+          </div>
+        </div>
       </div>
-      <div class="rounded-2xl overflow-hidden shadow-md hover:scale-105 transition">
-        <img src="{{ url_for('static', filename='img/moras.png') }}" alt="Moras" class="w-full h-56 object-cover">
+      
+      <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 group">
+        <div class="relative h-64 md:h-80">
+          <img src="{{ url_for('static', filename='img/moras.png') }}" alt="Moras" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+            <p class="text-white font-medium">Moras Selectas</p>
+          </div>
+        </div>
       </div>
     </div>
-    <p class="text-gray-700 mt-8 max-w-2xl mx-auto">
-      Fermentación controlada durante 14 días y des-alcoholización natural, preservando el perfil sensorial y el aroma frutal.
-    </p>
-  </div>
-
-<!-- Features Section -->
-<section class="py-20 bg-white text-center">
-  <div class="max-w-4xl mx-auto px-6">
-    <h2 class="text-4xl font-extrabold text-pink-700 mb-6">Nuestra Historia</h2>
-    <p class="text-slate-600 leading-relaxed text-lg">
-      <span class="font-semibold text-pink-600">BerriBrew</span> nació de la pasión por unir dos grandes amores: 
-      la cerveza artesanal y los sabores frutales de nuestra tierra. 
-      Inspirados por la naturaleza y la innovación, decidimos crear algo verdaderamente único.  
-    </p>
-    <p class="text-slate-600 leading-relaxed text-lg mt-6">
-      Tras años de experimentación, alcanzamos la fórmula perfecta que fusiona la frescura de las <span class="text-pink-500 font-medium">fresas</span> 
-      con la intensidad de las <span class="text-purple-500 font-medium">moras</span>, dando vida a una cerveza con personalidad propia.  
-      Cada botella refleja un proceso artesanal y cuidadoso, elaborado con las mejores frutas de temporada, 
-      maltas seleccionadas y lúpulos de la más alta calidad.  
-    </p>
-    <p class="text-slate-700 italic mt-8 text-xl font-medium">
-      Hoy, <span class="text-pink-600 font-bold">BerriBrew 0.0%</span> es más que una bebida:  
-      es una <span class="text-pink-700">celebración de la creatividad, la calidad</span>  
-      y el compromiso con ofrecer una experiencia cervecera inolvidable, sin alcohol.
-    </p>
+    
+    <div class="max-w-3xl mx-auto text-center bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+      <p class="text-gray-700 text-lg">
+        Fermentación controlada durante 14 días y des-alcoholización natural, preservando el perfil sensorial y el aroma frutal.
+      </p>
+    </div>
   </div>
 </section>
 
+<!-- History Section -->
+<section class="py-20 md:py-28 bg-white relative">
+  <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-purple-50 to-transparent"></div>
+  
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
 
+        <h2 class="text-4xl md:text-5xl font-extrabold text-pink-700 mb-6">Nuestra Historia</h2>
+      </div>
+      
+      <div class="space-y-8">
+        <div class="bg-pink-50 rounded-2xl p-8 shadow-sm border-l-4 border-pink-500">
+          <p class="text-slate-600 leading-relaxed text-lg">
+            <span class="font-semibold text-pink-600">BerriBrew</span> nació de la pasión por unir dos grandes amores: 
+            la cerveza artesanal y los sabores frutales de nuestra tierra. 
+            Inspirados por la naturaleza y la innovación, decidimos crear algo verdaderamente único.
+          </p>
+        </div>
+        
+        <div class="bg-purple-50 rounded-2xl p-8 shadow-sm border-l-4 border-purple-500">
+          <p class="text-slate-600 leading-relaxed text-lg">
+            Tras años de experimentación, alcanzamos la fórmula perfecta que fusiona la frescura de las <span class="text-pink-500 font-medium">fresas</span> 
+            con la intensidad de las <span class="text-purple-500 font-medium">moras</span>, dando vida a una cerveza con personalidad propia.  
+            Cada botella refleja un proceso artesanal y cuidadoso, elaborado con las mejores frutas de temporada, 
+            maltas seleccionadas y lúpulos de la más alta calidad.
+          </p>
+        </div>
+        
+        <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-8 shadow-sm">
+          <p class="text-slate-700 italic text-xl font-medium text-center">
+            Hoy, <span class="text-pink-600 font-bold">BerriBrew 0.0%</span> es más que una bebida:<br>
+            es una <span class="text-pink-700">celebración de la creatividad, la calidad</span><br>
+            y el compromiso con ofrecer una experiencia cervecera inolvidable, sin alcohol.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 md:py-28 bg-gradient-to-r from-pink-600 to-purple-700 text-white relative overflow-hidden">
+  <!-- Elementos decorativos -->
+  <div class="absolute top-0 left-0 w-full h-full opacity-10">
+    <div class="absolute top-10 left-10 w-64 h-64 rounded-full bg-white"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-white"></div>
+  </div>
+  
+  <div class="container mx-auto px-6 text-center relative z-10">
+    <h2 class="text-4xl md:text-5xl font-extrabold mb-6">¿Listo para probar BerriBrew?</h2>
+    <p class="text-xl text-pink-100 max-w-2xl mx-auto mb-10">
+      Descubre una nueva forma de disfrutar la cerveza, sin alcohol y con todo el sabor.
+    </p>
+    
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+      <a href="#" class="px-8 py-4 rounded-full bg-transparent border-2 border-white text-white hover:bg-white/10 transition font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-300">
+        Volver al Inicio
+      </a>
+    </div>
+  </div>
 </section>
 
 {% endblock %}

@@ -9,15 +9,32 @@
          alt="Cerveza artesanal sin alcohol Fresa y Mora" 
          class="w-full h-96 object-cover brightness-75">
     <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
+      <span class="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-4">
+        CERVEZA ARTESANAL SIN ALCOHOL
+      </span>
       <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-2xl">BerriBrew 0.0%</h1>
-      <p class="text-lg md:text-2xl mt-3 font-light">Cerveza artesanal sin alcohol · Fresa &amp; Mora</p>
+      <p class="text-lg md:text-2xl mt-3 font-light">Fresa &amp; Mora · Sabor Auténtico</p>
+      
+      <!-- Botón CTA en el hero -->
+      <div class="mt-8 animate-bounce">
+        <a href="#descripcion" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all duration-300 border border-white/30">
+          Conocer más <i class="ti ti-chevron-down"></i>
+        </a>
+      </div>
     </div>
     <!-- Franja decorativa inferior -->
     <div class="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-pink-600 via-rose-500 to-fuchsia-600"></div>
   </div>
 
   <!-- Descripción general -->
-  <div class="max-w-5xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-700 transition-all duration-500 hover:shadow-pink-300/40">
+  <div id="descripcion" class="max-w-5xl mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white/40 dark:border-slate-700 transition-all duration-500 hover:shadow-pink-300/40">
+    
+    <div class="text-center mb-10">
+      <span class="inline-block px-4 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-medium mb-4">
+        SOBRE NUESTRO PRODUCTO
+      </span>
+      <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400">BerriBrew 0.0%</h2>
+    </div>
     
     <p class="text-lg text-slate-700 dark:text-slate-200 mb-8 leading-relaxed text-justify">
       <span class="font-semibold text-pink-600">BerriBrew 0.0%</span> representa una nueva generación de cervezas artesanales, 
@@ -27,93 +44,214 @@
     </p>
 
     <!-- Galería -->
-    <div class="grid md:grid-cols-3 gap-6 my-10">
-      {% for item in [
-        {'img': 'img/beer_hero.jpg', 'alt': 'Cerveza base', 'label': 'Cerveza base'},
-        {'img': 'img/fresas.jpg', 'alt': 'Fresas frescas', 'label': 'Fresas frescas'},
-        {'img': 'img/moras.png', 'alt': 'Moras silvestres', 'label': 'Moras silvestres'}
-      ] %}
-      <div class="rounded-2xl overflow-hidden group relative shadow-lg hover:shadow-pink-300/50 transition-all duration-500">
-        <img src="{{ url_for('static', filename=item.img) }}" 
-             alt="{{ item.alt }}" 
-             class="h-56 w-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
-        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-500">
-          <span class="text-white text-lg font-semibold tracking-wide">{{ item.label }}</span>
+    <div class="mb-12">
+      <h3 class="text-xl font-semibold text-pink-700 dark:text-pink-400 mb-6 text-center">Ingredientes Principales</h3>
+      <div class="grid md:grid-cols-3 gap-6">
+        {% for item in [
+          {'img': 'img/beer_hero.jpg', 'alt': 'Cerveza base', 'label': 'Cerveza base'},
+          {'img': 'img/fresas.jpg', 'alt': 'Fresas frescas', 'label': 'Fresas frescas'},
+          {'img': 'img/moras.png', 'alt': 'Moras silvestres', 'label': 'Moras silvestres'}
+        ] %}
+        <div class="rounded-2xl overflow-hidden group relative shadow-lg hover:shadow-pink-300/50 transition-all duration-500">
+          <img src="{{ url_for('static', filename=item.img) }}" 
+               alt="{{ item.alt }}" 
+               class="h-56 w-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 flex items-end transition-all duration-500">
+            <span class="text-white text-lg font-semibold tracking-wide p-4">{{ item.label }}</span>
+          </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
 
     <!-- Objetivo -->
-    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-10 mb-3">🎯 Objetivo del Producto</h2>
-    <p class="text-slate-700 dark:text-slate-200 mb-6 leading-relaxed text-justify">
-      Ofrecer una <span class="font-medium text-pink-600">alternativa saludable y responsable</span> para quienes disfrutan del mundo cervecero 
-      sin consumir alcohol. Buscamos conservar la esencia artesanal, potenciar los sabores auténticos 
-      de la fresa y la mora, y garantizar un producto fresco, consistente y de calidad superior.
-    </p>
+    <div class="bg-pink-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-8 border-l-4 border-pink-500">
+      <div class="flex items-start gap-3">
+        <div class="bg-pink-100 dark:bg-pink-900/30 rounded-full p-3 flex-shrink-0">
+          <i class="ti ti-bullseye text-2xl text-pink-600 dark:text-pink-400"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-400 mb-3">Objetivo del Producto</h2>
+          <p class="text-slate-700 dark:text-slate-200 leading-relaxed text-justify">
+            Ofrecer una <span class="font-medium text-pink-600">alternativa saludable y responsable</span> para quienes disfrutan del mundo cervecero 
+            sin consumir alcohol. Buscamos conservar la esencia artesanal, potenciar los sabores auténticos 
+            de la fresa y la mora, y garantizar un producto fresco, consistente y de calidad superior.
+          </p>
+        </div>
+      </div>
+    </div>
 
     <!-- Proceso -->
-    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-8 mb-4">⚙️ Proceso de Elaboración</h2>
-    <ul class="list-disc pl-6 space-y-3 text-slate-700 dark:text-slate-200 leading-relaxed">
-      <li><strong>Fermentación controlada:</strong> dos semanas que desarrollan cuerpo, aroma y sabor natural.</li>
-      <li><strong>Des-alcoholización:</strong> técnica avanzada que elimina el alcohol sin alterar el perfil sensorial.</li>
-      <li><strong>Sabores naturales:</strong> fresa y mora auténticas, sin colorantes ni saborizantes artificiales.</li>
-    </ul>
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-400 mb-6 flex items-center gap-3">
+        <i class="ti ti-settings text-2xl"></i> Proceso de Elaboración
+      </h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl shadow-sm border border-pink-100 dark:border-slate-700">
+          <div class="text-pink-600 dark:text-pink-400 mb-2">
+            <i class="ti ti-clock text-3xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Fermentación controlada</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Dos semanas que desarrollan cuerpo, aroma y sabor natural.</p>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl shadow-sm border border-pink-100 dark:border-slate-700">
+          <div class="text-pink-600 dark:text-pink-400 mb-2">
+            <i class="ti ti-flask text-3xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Des-alcoholización</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Técnica avanzada que elimina el alcohol sin alterar el perfil sensorial.</p>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-800/50 p-5 rounded-xl shadow-sm border border-pink-100 dark:border-slate-700">
+          <div class="text-pink-600 dark:text-pink-400 mb-2">
+            <i class="ti ti-leaf text-3xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg mb-2">Sabores naturales</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">Fresa y mora auténticas, sin colorantes ni saborizantes artificiales.</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Ficha de sabor -->
-    <h2 class="text-3xl font-bold text-pink-700 dark:text-pink-400 mt-10 mb-5">🍓 Ficha de Sabor</h2>
-    <div class="overflow-hidden rounded-2xl border border-pink-200 dark:border-pink-800 bg-white/90 dark:bg-slate-800/70 shadow-inner">
-      <table class="w-full text-left text-slate-700 dark:text-slate-200">
-        <thead class="bg-gradient-to-r from-pink-600 via-rose-500 to-fuchsia-600 text-white">
-          <tr>
-            <th class="px-6 py-3">Atributo</th>
-            <th class="px-6 py-3">Descripción</th>
-            <th class="px-6 py-3 text-center">Nivel</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in [
-            ['Dulzura','Equilibrada, con notas naturales de fresa madura.','⭐⭐⭐✰✰'],
-            ['Acidez','Refrescante, proveniente de las moras silvestres.','⭐⭐⭐⭐✰'],
-            ['Cuerpo','Ligero, con textura cremosa y final suave.','⭐⭐⭐✰✰'],
-            ['Aroma','Notas frutales intensas con toque floral.','⭐⭐⭐⭐⭐'],
-            ['Amargor','Suave y sutil, apenas perceptible para balancear el dulzor.','⭐⭐✰✰✰']
-          ] %}
-          <tr class="border-b border-pink-100 dark:border-slate-700">
-            <td class="px-6 py-4 font-medium">{{ row[0] }}</td>
-            <td class="px-6 py-4">{{ row[1] }}</td>
-            <td class="px-6 py-4 text-center">{{ row[2] }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="mb-10">
+      <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-400 mb-6 flex items-center gap-3">
+        <i class="ti ti-ice-cream text-2xl"></i> Ficha de Sabor
+      </h2>
+      <div class="overflow-hidden rounded-2xl border border-pink-200 dark:border-pink-800 bg-white/90 dark:bg-slate-800/70 shadow-lg">
+        <table class="w-full text-left text-slate-700 dark:text-slate-200">
+          <thead class="bg-gradient-to-r from-pink-600 via-rose-500 to-fuchsia-600 text-white">
+            <tr>
+              <th class="px-6 py-4">Atributo</th>
+              <th class="px-6 py-4">Descripción</th>
+              <th class="px-6 py-4 text-center">Nivel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in [
+              ['Dulzura','Equilibrada, con notas naturales de fresa madura.','⭐⭐⭐✰✰'],
+              ['Acidez','Refrescante, proveniente de las moras silvestres.','⭐⭐⭐⭐✰'],
+              ['Cuerpo','Ligero, con textura cremosa y final suave.','⭐⭐⭐✰✰'],
+              ['Aroma','Notas frutales intensas con toque floral.','⭐⭐⭐⭐⭐'],
+              ['Amargor','Suave y sutil, apenas perceptible para balancear el dulzor.','⭐⭐✰✰✰']
+            ] %}
+            <tr class="border-b border-pink-100 dark:border-slate-700 hover:bg-pink-50 dark:hover:bg-slate-700/50 transition-colors">
+              <td class="px-6 py-4 font-medium">{{ row[0] }}</td>
+              <td class="px-6 py-4">{{ row[1] }}</td>
+              <td class="px-6 py-4 text-center">{{ row[2] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Galería adicional -->
+    <div class="mb-10">
+      <h2 class="text-2xl font-bold text-pink-700 dark:text-pink-400 mb-6 flex items-center gap-3">
+        <i class="ti ti-photo text-2xl"></i> Galería de Producto
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {% for img in ['img/gallery1.jpg', 'img/gallery2.jpg', 'img/gallery3.jpg', 'img/gallery4.jpg', 'img/gallery5.jpg', 'img/gallery6.jpg'] %}
+        <div class="overflow-hidden rounded-2xl shadow-lg hover:shadow-pink-300/50 transition-all duration-500 group">
+          <img src="{{ url_for('static', filename=img) }}" 
+               alt="Galería BerriBrew" 
+               class="h-48 w-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4">
+            <span class="text-white text-sm font-medium">BerriBrew 0.0%</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
 
     <!-- Botones -->
     <div class="mt-10 flex flex-wrap gap-4 justify-center">
       <a href="{{ url_for('producto_folleto') }}" 
-         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-700 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-700 text-white hover:opacity-90 shadow-lg transition-all duration-300 transform hover:-translate-y-1">
         <i class="ti ti-file-type-pdf text-xl"></i> Descargar folleto PDF
       </a>
       <a href="{{ url_for('producto_ficha') }}" 
-         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:opacity-90 shadow-lg transition-all duration-300 transform hover:-translate-y-1">
         <i class="ti ti-file-analytics text-xl"></i> Ficha técnica PDF
       </a>
       <a href="{{ url_for('index') }}" 
-         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:opacity-90 shadow-lg transition-all duration-300">
+         class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:opacity-90 shadow-lg transition-all duration-300 transform hover:-translate-y-1">
         <i class="ti ti-arrow-left text-xl"></i> Volver al Inicio
       </a>
     </div>
 
   </div>
+  
+  <!-- Sección Testimonios -->
+  <div class="max-w-5xl mx-auto mt-16 mb-10">
+    <div class="text-center mb-10">
+      <span class="inline-block px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium mb-4">
+        TESTIMONIOS
+      </span>
+      <h2 class="text-3xl font-bold text-purple-800 dark:text-purple-400">Lo que dicen nuestros clientes</h2>
+    </div>
+    
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/40 dark:border-slate-700">
+        <div class="flex items-center mb-4">
+          <div class="text-yellow-400">
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+          </div>
+          <span class="ml-2 text-sm text-slate-500">Hace 2 días</span>
+        </div>
+        <p class="text-slate-700 dark:text-slate-200 mb-4">"No me gusta el alcohol, pero siempre quise disfrutar de una buena cerveza. BerriBrew ha cambiado mi perspectiva. El sabor es increíble y no siento que me esté perdiendo de nada."</p>
+        <div class="flex items-center">
+          <div class="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center text-pink-700 font-bold">M</div>
+          <div class="ml-3">
+            <p class="font-medium">María G.</p>
+            <p class="text-sm text-slate-500">Cliente verificada</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/40 dark:border-slate-700">
+        <div class="flex items-center mb-4">
+          <div class="text-yellow-400">
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+            <i class="ti ti-star-filled"></i>
+          </div>
+          <span class="ml-2 text-sm text-slate-500">Hace 1 semana</span>
+        </div>
+        <p class="text-slate-700 dark:text-slate-200 mb-4">"Como cervecero aficionado, soy escéptico con las cervezas sin alcohol, pero BerriBrew sorprende por su cuerpo y complejidad. Las notas de fresa y mora son naturales y bien equilibradas."</p>
+        <div class="flex items-center">
+          <div class="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-bold">C</div>
+          <div class="ml-3">
+            <p class="font-medium">Carlos R.</p>
+            <p class="text-sm text-slate-500">Cliente verificado</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Sección CTA -->
+  <div class="max-w-5xl mx-auto mt-10 mb-16">
+    <div class="bg-gradient-to-r from-pink-600 to-purple-700 rounded-3xl p-8 md:p-12 text-center text-white shadow-xl">
+      <h2 class="text-3xl md:text-4xl font-bold mb-4">¿Listo para probar BerriBrew?</h2>
+      <p class="text-lg text-pink-100 max-w-2xl mx-auto mb-8">
+        Descubre una nueva forma de disfrutar la cerveza, sin alcohol y con todo el sabor.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <a href="#" class="px-8 py-4 rounded-full bg-transparent border-2 border-white text-white hover:bg-white/10 transition font-bold text-lg shadow-lg transform hover:scale-105 transition-all duration-300">
+          Vuelve a Producto
+        </a>
+      </div>
+    </div>
+  </div>
+
 </section>
 {% endblock %}
-  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-6">
-    {% for img in ['img/gallery1.jpg', 'img/gallery2.jpg', 'img/gallery3.jpg', 'img/gallery4.jpg', 'img/gallery5.jpg', 'img/gallery6.jpg'] %}
-    <div class="overflow-hidden rounded-2xl shadow-lg hover:shadow-pink-300/50 transition-all duration-500">
-      <img src="{{ url_for('static', filename=img) }}" 
-           alt="Galería BerriBrew" 
-           class="h-48 w-full object-cover hover:scale-110 transition-transform duration-700 ease-out">
-    </div>
-    {% endfor %}
-  </div>
