@@ -2,62 +2,119 @@
 {% block content %}
 
 <!-- Fondo con degradado y centrado del formulario -->
-<section class="min-h-[80vh] flex items-center justify-center">
-  <div class="glass rounded-3xl shadow-xl max-w-md w-full p-8 border border-white/40 dark:border-slate-700 backdrop-blur-xl transition">
+<section class="min-h-[80vh] flex items-center justify-center px-4">
+  <div class="glass rounded-3xl shadow-gold max-w-md w-full p-8
+              border border-white/40 dark:border-gold-700/30 backdrop-blur-xl transition">
+
+    <!-- Encabezado -->
     <div class="text-center mb-6">
-      <i class="ti ti-beer text-5xl text-brand-600"></i>
-      <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white mt-3">Crear cuenta</h1>
-      <p class="text-sm text-slate-500 dark:text-slate-400">
-        Únete a <span class="font-semibold text-brand-600">BerriBrew</span> · Fresa & Mora 0.0%
+      <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center
+                  bg-gradient-to-br from-brand-400 to-brand-600
+                  dark:from-gold-700 dark:to-gold-500 shadow-soft border border-white/30 dark:border-gold-700/40">
+        <i class="fa-solid fa-beer-mug-empty text-white dark:text-ink-900 text-2xl"></i>
+      </div>
+
+      <h1 class="text-3xl font-extrabold mt-4 text-brand-800 dark:text-gold-300">Crear cuenta</h1>
+      <p class="text-sm text-brand-800/70 dark:text-gold-200/70">
+        Únete a <span class="font-semibold text-brand-700 dark:text-gold-400">Dinobrew</span> · Edición 0.0%
       </p>
     </div>
 
+    <!-- Formulario -->
     <form method="post" class="space-y-5">
       <!-- Nombre -->
       <div>
-        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Nombre completo</label>
+        <label class="block text-sm font-medium mb-1 text-brand-800 dark:text-gold-200">Nombre completo</label>
         <div class="relative">
-          <i class="ti ti-user absolute left-3 top-2.5 text-slate-400"></i>
+          <i class="ti ti-user absolute left-3 top-1/2 -translate-y-1/2 text-brand-700/60 dark:text-gold-300/60"></i>
           <input name="name" required
-            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+            class="w-full pl-10 pr-3 py-2.5 rounded-xl
+                   border border-brand-200 dark:border-ink-700
+                   bg-white/80 dark:bg-ink-800/70
+                   text-brand-900 dark:text-gold-100
+                   placeholder-brand-800/60 dark:placeholder-gold-300/60
+                   focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-gold-500 transition"
             placeholder="Tu nombre completo">
         </div>
       </div>
 
       <!-- Correo -->
       <div>
-        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Correo electrónico</label>
+        <label class="block text-sm font-medium mb-1 text-brand-800 dark:text-gold-200">Correo electrónico</label>
         <div class="relative">
-          <i class="ti ti-mail absolute left-3 top-2.5 text-slate-400"></i>
+          <i class="ti ti-mail absolute left-3 top-1/2 -translate-y-1/2 text-brand-700/60 dark:text-gold-300/60"></i>
           <input name="email" type="email" required
-            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+            class="w-full pl-10 pr-3 py-2.5 rounded-xl
+                   border border-brand-200 dark:border-ink-700
+                   bg-white/80 dark:bg-ink-800/70
+                   text-brand-900 dark:text-gold-100
+                   placeholder-brand-800/60 dark:placeholder-gold-300/60
+                   focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-gold-500 transition"
             placeholder="correo@ejemplo.com">
         </div>
       </div>
 
       <!-- Contraseña -->
       <div>
-        <label class="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Contraseña</label>
+        <label class="block text-sm font-medium mb-1 text-brand-800 dark:text-gold-200">Contraseña</label>
         <div class="relative">
-          <i class="ti ti-lock absolute left-3 top-2.5 text-slate-400"></i>
-          <input name="password" type="password" required
-            class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/70 focus:ring-2 focus:ring-brand-400 outline-none transition"
+          <i class="ti ti-lock absolute left-3 top-1/2 -translate-y-1/2 text-brand-700/60 dark:text-gold-300/60"></i>
+          <input id="password" name="password" type="password" required
+            class="w-full pl-10 pr-12 py-2.5 rounded-xl
+                   border border-brand-200 dark:border-ink-700
+                   bg-white/80 dark:bg-ink-800/70
+                   text-brand-900 dark:text-gold-100
+                   placeholder-brand-800/60 dark:placeholder-gold-300/60
+                   focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-gold-500 transition"
             placeholder="••••••••">
+          <!-- Toggle mostrar/ocultar -->
+          <button type="button" id="togglePwd"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg
+                         hover:bg-brand-50 dark:hover:bg-ink-700"
+                  aria-label="Mostrar u ocultar contraseña">
+            <i class="ti ti-eye text-brand-700/70 dark:text-gold-300/70"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Botón -->
+      <!-- Botón principal -->
       <button type="submit"
-        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-fuchsia-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+        class="w-full py-2.5 rounded-xl font-semibold shadow-gold hover:shadow-lg hover:scale-[1.02] transition-all
+               text-white dark:text-ink-900
+               bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400
+               dark:from-gold-600 dark:to-gold-500 dark:hover:from-gold-500 dark:hover:to-gold-400">
         <i class="ti ti-user-plus mr-1"></i> Crear cuenta
       </button>
     </form>
 
-    <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+    <!-- Enlaces -->
+    <p class="text-center text-sm text-brand-800/70 dark:text-gold-200/70 mt-6">
       ¿Ya tienes una cuenta?
-      <a href="{{ url_for('login') }}" class="text-brand-600 font-semibold hover:underline">Inicia sesión aquí</a>
+      <a href="{{ url_for('login') }}"
+         class="font-semibold text-brand-700 hover:underline dark:text-gold-300">Inicia sesión aquí</a>
     </p>
+
+    <div class="text-center mt-4">
+      <a href="{{ url_for('index') }}"
+         class="text-sm text-brand-700 hover:underline dark:text-gold-300">Volver al inicio</a>
+    </div>
   </div>
 </section>
+
+<!-- Toggle contraseña -->
+<script>
+  (function () {
+    const btn = document.getElementById('togglePwd');
+    const input = document.getElementById('password');
+    if (!btn || !input) return;
+    btn.addEventListener('click', () => {
+      const isPwd = input.type === 'password';
+      input.type = isPwd ? 'text' : 'password';
+      btn.innerHTML = isPwd
+        ? '<i class="ti ti-eye-off text-brand-700/70 dark:text-gold-300/70"></i>'
+        : '<i class="ti ti-eye text-brand-700/70 dark:text-gold-300/70"></i>';
+    });
+  })();
+</script>
 
 {% endblock %}
