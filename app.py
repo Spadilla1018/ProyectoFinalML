@@ -1,6 +1,6 @@
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, jsonify, send_file, abort
+    flash, jsonify, send_file, abort, session
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -391,6 +391,10 @@ def upload():
         except Exception:
             df = pd.read_csv(path)
         CURRENT_DF = df; CURRENT_FILENAME = f.filename
+        
+        # Guardar el path del dataset en la sesión para usarlo en el endpoint de insights
+        session['dataset_path'] = path
+        
         flash(f"Archivo {f.filename} cargado correctamente.", "success")
         return redirect(url_for("entendimiento"))
     except Exception as e:
@@ -447,6 +451,108 @@ def plot_corr():
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04); ax.set_title("Matriz de correlación")
     buf = io.BytesIO(); plt.tight_layout(); fig.savefig(buf, format="png", dpi=160); plt.close(fig); buf.seek(0)
     return send_file(buf, mimetype="image/png")
+
+# ----------------------------------
+# Endpoint para obtener insights dinámicos
+# ----------------------------------
+@app.route('/api/insights')
+@login_required
+def get_insights():
+    try:
+        # Obtener el dataset actual desde la sesión
+        if 'dataset_path' not in session:
+            return jsonify({"error": "No hay dataset cargado"}), 400
+            
+        dataset_path = session['dataset_path']
+        if not os.path.exists(dataset_path):
+            return jsonify({"error": "El dataset no existe"}), 400
+            
+        df = pd.read_csv(dataset_path)
+        
+        insights = {}
+        
+        # 1. Perfil de cliente
+        # Calcular edad promedio y rango
+        if 'edad' in df.columns:
+            edad_promedio = df['edad'].mean()
+            edad_min = df['edad'].min()
+            edad_max = df['edad'].max()
+            edad_rango = f"{int(edad_min)}-{int(edad_max)} años"
+            
+            # Género más común entre los que más gastan
+            if 'genero' in df.columns and 'gasto_mensual' in df.columns:
+                top_spenders = df.nlargest(5, 'gasto_mensual')
+                genero_comun = top_spenders['genero'].mode().iloc[0] if not top_spenders.empty else "No disponible"
+            else:
+                genero_comun = "No disponible"
+            
+            # Nivel de ingreso promedio
+            if 'ingreso' in df.columns:
+                ingreso_promedio = df['ingreso'].mean()
+                if ingreso_promedio < 30000:
+                    nivel_ingreso = "bajos"
+                elif ingreso_promedio < 40000:
+                    nivel_ingreso = "medios"
+                else:
+                    nivel_ingreso = "altos"
+            else:
+                nivel_ingreso = "no disponible"
+            
+            # Intereses (si existe una columna de intereses, si no, usamos un valor por defecto)
+            intereses = "productos frutales"  # Valor por defecto
+            if 'intereses' in df.columns:
+                intereses_comun = df['intereses'].mode().iloc[0] if not df['intereses'].empty else "productos frutales"
+                if isinstance(intereses_comun, str):
+                    intereses = intereses_comun
+        else:
+            edad_rango = "no disponible"
+            genero_comun = "no disponible"
+            nivel_ingreso = "no disponible"
+            intereses = "no disponible"
+        
+        insights['customer_profile'] = {
+            "age_range": edad_rango,
+            "gender": genero_comun,
+            "income_level": nivel_ingreso,
+            "interests": intereses
+        }
+        
+        # 2. Preferencias
+        if 'sabor_preferido' in df.columns:
+            preferencias = df['sabor_preferido'].value_counts().reset_index()
+            preferencias.columns = ['name', 'count']
+            preferencias['percentage'] = (preferencias['count'] / preferencias['count'].sum() * 100).round(1)
+            insights['preferences'] = preferencias[['name', 'percentage']].to_dict('records')
+        else:
+            # Si no hay columna de sabor_preferido, usar valores por defecto
+            insights['preferences'] = [
+                {"name": "fresa", "percentage": 65.0},
+                {"name": "moras", "percentage": 35.0}
+            ]
+        
+        # 3. Precios óptimos
+        if 'sabor_preferido' in df.columns and 'precio_pagado' in df.columns:
+            precios_optimos = []
+            for sabor in df['sabor_preferido'].unique():
+                sabor_df = df[df['sabor_preferido'] == sabor]
+                # Precio óptimo podría ser el promedio de lo que están dispuestos a pagar
+                precio_optimo = sabor_df['precio_pagado'].mean().round(0)
+                precios_optimos.append({
+                    "product": sabor,
+                    "price": int(precio_optimo)
+                })
+            insights['optimal_prices'] = precios_optimos
+        else:
+            # Si no hay columnas necesarias, usar valores por defecto
+            insights['optimal_prices'] = [
+                {"product": "fresa", "price": 110},
+                {"product": "moras", "price": 125}
+            ]
+        
+        return jsonify(insights)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ----------------------------------
 # Lotes / Lecturas / Des-alcoholización

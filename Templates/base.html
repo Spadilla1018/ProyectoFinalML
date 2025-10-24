@@ -202,13 +202,13 @@
             <a href="{{ url_for('entendimiento') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='entendimiento' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
-              <i class="fa-solid fa-chart-line text-brand-600 dark:text-gold-400 text-lg"></i><span>Entendimiento</span>
+              <i class="fa-solid fa-chart-line text-brand-600 dark:text-gold-400 text-lg"></i><span>DinoAnalyticsML</span>
             </a>
 
             <a href="{{ url_for('batches_list') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
-               hover:bg-brand-100/60 dark:hover:bg-ink-800
-               {% if request.endpoint=='batches_list' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
-              <i class="fa-solid fa-boxes-stacked text-brand-600 dark:text-gold-400 text-lg"></i><span>Lotes</span>
+              hover:bg-brand-100/60 dark:hover:bg-ink-800
+              {% if request.endpoint=='batches_list' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
+              <i class="fa-solid fa-chart-column text-brand-600 dark:text-gold-400 text-lg"></i><span>XXX</span>
             </a>
             {% endif %}
           </nav>
@@ -244,7 +244,7 @@
             <i class="fa-solid fa-chart-line mr-2 text-brand-600 dark:text-gold-400"></i> Entendimiento
           </a>
           <a href="{{ url_for('batches_list') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
-            <i class="fa-solid fa-boxes-stacked mr-2 text-brand-600 dark:text-gold-400"></i> Lotes
+            <i class="fa-solid fa-boxes-stacked mr-2 text-brand-600 dark:text-gold-400"></i> DinoAnalyticsML
           </a>
           {% endif %}
         </nav>
