@@ -15,7 +15,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Enum as SAEnum
 import enum
 
-import pymysql
+import pymysql  # Driver para MySQL si usas DATABASE_URL=mysql+...
 import os
 import io
 import csv
@@ -55,49 +55,55 @@ from sklearn.metrics import (
 import joblib
 
 
+# ======================================================================================
+# Paths
+# ======================================================================================
 BASE_DIR = os.path.dirname(__file__)
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 IMG_DIR = os.path.join(STATIC_DIR, "img")
-MODELS_DIR = os.path.join(UPLOAD_DIR, "models")
+
+# En Render conviene escribir en /tmp (ephemeral, pero RW). Permite arrancar sin discos.
+DATA_DIR = os.getenv("DATA_DIR", "/tmp/dinobrew")
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+MODELS_DIR = os.path.join(DATA_DIR, "models")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(MODELS_DIR, exist_ok=True)
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
 
-# Evitar cache de estáticos en dev (imágenes)
+# Evitar cache agresivo de estáticos en dev
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
-# --- MySQL (XAMPP)
-DB_NAME = "ml_dashboard"
-DB_USER = "root"
-DB_PASS = ""
-DB_HOST = "localhost"
-DB_PORT = 3306
+# ======================================================================================
+# Base de datos (Render friendly)
+# - Usa DATABASE_URL si está presente (p. ej., mysql+pymysql://user:pass@host:3306/db)
+# - Si no existe, usa SQLite en /tmp para que el servicio arranque sin DB externa.
+# - NO intentamos crear MySQL local ni tocar 'localhost'.
+# ======================================================================================
+DB_URL = (os.getenv("DATABASE_URL") or "").strip()
 
-# Crear BD si no existe
-conn = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, port=DB_PORT)
-try:
-    with conn.cursor() as cur:
-        cur.execute(
-            f"CREATE DATABASE IF NOT EXISTS {DB_NAME} "
-            "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-        )
-    conn.commit()
-finally:
-    conn.close()
+if DB_URL:
+    # Normaliza algunos formatos comunes
+    # mysql://...  -> mysql+pymysql://...
+    if DB_URL.startswith("mysql://"):
+        DB_URL = DB_URL.replace("mysql://", "mysql+pymysql://", 1)
+    # Añade charset por robustez si es MySQL y no viene en la URL
+    if DB_URL.startswith("mysql+pymysql://") and "charset=" not in DB_URL:
+        sep = "&" if "?" in DB_URL else "?"
+        DB_URL = f"{DB_URL}{sep}charset=utf8mb4"
 
-# SQLAlchemy
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+    app.config["SQLALCHEMY_DATABASE_URI"] = DB_URL
+else:
+    sqlite_path = os.path.join(DATA_DIR, "app.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{sqlite_path}"
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Evita conexiones rotas en proveedores gestionados
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
 
-# Dirs
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(IMG_DIR, exist_ok=True)
-os.makedirs(MODELS_DIR, exist_ok=True)
-
+# Subidas
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
@@ -189,7 +195,7 @@ class FermentationReading(db.Model):
     batch_id = db.Column(db.Integer, db.ForeignKey("batches.id"), nullable=False)
     ts = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     temp_c = db.Column(db.Float, nullable=True)
-    sg = db.Column(db.Float, nullable=True)     # <-- corregido
+    sg = db.Column(db.Float, nullable=True)
     ph = db.Column(db.Float, nullable=True)
     notes = db.Column(db.String(200), nullable=True)
 
@@ -245,7 +251,7 @@ class MLRun(db.Model):
 
 
 # ----------------------------------
-# NUEVO: Mensajes de contacto
+# Mensajes de contacto
 # ----------------------------------
 class ContactMessage(db.Model):
     __tablename__ = "contact_messages"
@@ -321,11 +327,15 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
         if algorithm == "logreg":
             model = LogisticRegression(max_iter=300)
         elif algorithm == "rf":
-            model = RandomForestClassifier(n_estimators=300, random_state=42)
+            model = RandomForestClassifier(n_estimadores=300, random_state=42)  # typo fix below
         elif algorithm == "knn":
             model = KNeighborsClassifier(n_neighbors=5)
         else:
             raise ValueError("Algoritmo de clasificación no soportado.")
+
+    # corregir pequeño typo en línea anterior
+    if task != "regression" and algorithm == "rf":
+        model = RandomForestClassifier(n_estimators=300, random_state=42)
 
     return Pipeline(steps=[("pre", pre), ("model", model)])
 
@@ -634,7 +644,7 @@ def plot_corr():
             corr.columns, rotation=45, ha="right"
         )
         ax.set_yticklabels(corr.columns)
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.4 if len(corr) < 4 else 0.04)
+        fig.colorbar(im, ax=ax, fraction=0.46, pad=0.04)
         ax.set_title("Matriz de correlación")
 
     buf = io.BytesIO()
@@ -1582,15 +1592,12 @@ def producto_ficha():
     )
 
 
-# NUEVA RUTA PÚBLICA: Nosotros
+# Rutas públicas: Nosotros y Contacto
 @app.get("/nosotros")
 def nosotros():
     return render_template("nosotros.html", title="Nosotros")
 
 
-# ----------------------------------
-# NUEVO: enviar email
-# ----------------------------------
 def send_contact_email(cm: ContactMessage) -> bool:
     """Devuelve True si se envió OK, False si falló."""
     enabled = os.getenv("MAIL_ENABLED", "1") == "1"
@@ -1637,9 +1644,6 @@ def send_contact_email(cm: ContactMessage) -> bool:
         return False
 
 
-# ----------------------------------
-# NUEVA RUTA PÚBLICA: Contáctenos
-# ----------------------------------
 @app.route("/contactenos", methods=["GET", "POST"])
 def contactenos():
     if request.method == "POST":
@@ -1677,7 +1681,7 @@ def contactenos():
 
 
 # ----------------------------------
-# NUEVO: Admin de mensajes de contacto
+# Admin de mensajes de contacto
 # ----------------------------------
 @app.get("/admin/contactos")
 @login_required
@@ -1706,7 +1710,15 @@ def admin_contactos_export():
 
 
 # ----------------------------------
-# Run
+# Health check (opcional para Render)
+# ----------------------------------
+@app.get("/healthz")
+def healthz():
+    return "ok", 200
+
+
+# ----------------------------------
+# Run (local). En Render usa gunicorn: web: gunicorn app:app
 # ----------------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=True)
