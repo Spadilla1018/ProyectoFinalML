@@ -199,7 +199,7 @@
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='producto' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
               <i class="fa-solid fa-bottle-droplet text-brand-600 dark:text-gold-400 text-lg"></i>
-              <span>Producto</span>
+              <span>Nuestra Cerveza</span>
             </a>
 
             <!-- DinoAnalyticsML (solo logueado) -->
@@ -217,9 +217,16 @@
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='nosotros' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
               <i class="fa-solid fa-users text-brand-600 dark:text-gold-400 text-lg"></i>
-              <span>Nosotros</span>
+              <span>Quienes Somos</span>
             </a>
           </nav>
+             <!-- Contactenos -->
+            <a href="{{ url_for('nosotros') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
+              hover:bg-brand-100/60 dark:hover:bg-ink-800
+              {% if request.endpoint=='nosotros' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
+              <i class="fa-solid fa-envelope text-brand-600 dark:text-gold-400 text-lg"></i>
+              <span>Contactenos</span>
+            </a>
 
           <div class="mt-auto p-4 text-xs text-brand-700/70 dark:text-gold-300/70">
             &copy; {{ 2025 }} Dinobrew · Sin excusas
@@ -266,7 +273,7 @@
           <!-- Nosotros -->
           <a href="{{ url_for('nosotros') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-users mr-2 text-brand-600 dark:text-gold-400"></i>
-            Nosotros
+            Quines Somos
           </a>
 
         </nav>
