@@ -16,22 +16,17 @@
       theme: {
         extend: {
           colors: {
-            /* Paleta Dinobrew (ámbar/vidrio) */
             brand: {
               50:"#F4E3C1",100:"#EFD3A0",200:"#E4B169",300:"#D69745",
               400:"#C17A33",500:"#A25F22",600:"#794617",700:"#4B2E05",
               800:"#3B2304",900:"#2C1A03"
             },
-            /* Dorado premium para modo oscuro */
             gold: {
               50:"#FFF7DC",100:"#FBE9B9",200:"#F4D889",300:"#EEC766",
               400:"#E8C66A",500:"#DDB44C",600:"#C79E37",700:"#A78129",
               800:"#87661C",900:"#6B4F14"
             },
-            /* Tinta/negro etiqueta */
-            ink: {
-              900:"#0B0B0B", 800:"#121212", 700:"#171717"
-            }
+            ink: { 900:"#0B0B0B", 800:"#121212", 700:"#171717" }
           },
           boxShadow: {
             soft:"0 8px 24px rgba(0,0,0,.10)",
@@ -44,14 +39,9 @@
   </script>
 
   <style>
-    /* Glass */
     .glass { background: rgba(255,255,255,.8); backdrop-filter: saturate(180%) blur(8px); }
     .dark .glass { background: rgba(11,11,11,.6); }
-
-    /* Layout */
     :root { --header-h: 64px; }
-
-    /* Sidebar desktop (hover) */
     .sidebar-overlay {
       position: fixed; left: 0; top: var(--header-h);
       height: calc(100vh - var(--header-h));
@@ -64,8 +54,6 @@
     }
     .sidebar-overlay:hover { width: 16rem; }
     .sidebar-overlay:hover .sidebar-sheet { transform: translateX(0); }
-
-    /* Pestaña flecha */
     .toggle-tab{
       position:absolute; top:10px; left:0; width:34px; height:42px;
       background: linear-gradient(135deg,#C17A33,#A25F22); color:#fff;
@@ -77,27 +65,19 @@
     .toggle-tab:hover{ background: linear-gradient(135deg,#E4B169,#C17A33); }
     .sidebar-overlay:hover .toggle-tab i{ transform: rotate(180deg); }
     .toggle-tab i{ transition: transform .25s ease; }
-
-    /* Drawer móvil */
     .drawer {
       position:fixed; inset:0 auto 0 0; width:18rem; transform:translateX(-100%);
       transition: transform .35s ease; z-index:50;
     }
-    .drawer.backdrop {
-      inset:0; width:100%; transform:none; background:rgba(0,0,0,.4); display:none;
-    }
+    .drawer.backdrop { inset:0; width:100%; transform:none; background:rgba(0,0,0,.4); display:none; }
     .drawer-open .drawer.panel { transform: translateX(0); }
     .drawer-open .drawer.backdrop { display:block; }
-
-    /* Oculta overlay hover en móviles */
     @media (max-width: 767px) { .sidebar-overlay{ display:none; } }
   </style>
 
-  <!-- Charts (si se usan en páginas hijas) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script>
-    /* Tema inicial */
     (function(){
       const s = localStorage.getItem('theme');
       if(s==='dark' || (!s && matchMedia('(prefers-color-scheme: dark)').matches))
@@ -108,15 +88,10 @@
 
 <body class="h-full bg-gradient-to-br from-brand-50 via-brand-100 to-brand-200 dark:from-ink-900 dark:via-ink-800 dark:to-ink-900 text-brand-900 dark:text-gold-50">
   <div class="min-h-screen flex">
-
-    <!-- Columna principal -->
     <div class="flex-1 flex flex-col">
 
-      <!-- Header -->
       <header id="appHeader" class="glass border-b border-white/60 dark:border-ink-700 sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-
-          <!-- Logo -->
           <div class="flex items-center gap-3">
             <a href="{{ url_for('index') }}" class="flex items-center gap-3">
               <div class="flex items-center justify-center h-12 w-12 rounded-full
@@ -129,16 +104,13 @@
             </a>
           </div>
 
-          <!-- Acciones -->
           <div class="flex items-center gap-2">
-            <!-- Botón hamburguesa (móvil) -->
             <button id="btnMenu" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg
                                        bg-white/70 hover:bg-white dark:bg-ink-800 dark:hover:bg-ink-700
                                        border border-white/40 dark:border-ink-700" title="Menú">
               <i class="ti ti-menu-2 text-brand-700 dark:text-gold-400"></i>
             </button>
 
-            <!-- Tema -->
             <button id="themeToggle" class="inline-flex items-center justify-center w-10 h-10 rounded-lg
                                            hover:bg-white/70 dark:hover:bg-ink-700 border border-white/40 dark:border-ink-700" title="Tema">
               <i class="ti ti-moon-stars dark:hidden text-brand-700"></i>
@@ -168,7 +140,26 @@
         </div>
       </header>
 
-      <!-- Sidebar desktop (hover) -->
+      <!-- FLASHES -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="max-w-3xl mx-auto px-4 mt-4 space-y-2 w-full">
+            {% for category, message in messages %}
+              <div class="rounded-lg px-4 py-3 text-sm
+                          {% if category in ['error','danger'] %}
+                            bg-red-50 text-red-800 border border-red-200
+                          {% elif category in ['warning'] %}
+                            bg-yellow-50 text-yellow-900 border border-yellow-200
+                          {% else %}
+                            bg-green-50 text-green-800 border border-green-200
+                          {% endif %}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
       <div class="sidebar-overlay hidden md:block" aria-hidden="true">
         <div class="toggle-tab" title="Abrir panel"><i class="fa-solid fa-chevron-right"></i></div>
 
@@ -186,7 +177,6 @@
           </div>
 
           <nav class="mt-2 px-2 text-sm space-y-1">
-            <!-- Inicio -->
             <a href="{{ url_for('index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='index' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
@@ -194,7 +184,6 @@
               <span>Inicio</span>
             </a>
 
-            <!-- Producto -->
             <a href="{{ url_for('producto') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='producto' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
@@ -202,7 +191,6 @@
               <span>Nuestra Cerveza</span>
             </a>
 
-            <!-- DinoAnalyticsML (solo logueado) -->
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('entendimiento') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
                hover:bg-brand-100/60 dark:hover:bg-ink-800
@@ -212,21 +200,29 @@
             </a>
             {% endif %}
 
-            <!-- Nosotros (PÚBLICO SIEMPRE) -->
             <a href="{{ url_for('nosotros') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
                hover:bg-brand-100/60 dark:hover:bg-ink-800
                {% if request.endpoint=='nosotros' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
               <i class="fa-solid fa-users text-brand-600 dark:text-gold-400 text-lg"></i>
-              <span>Quienes Somos</span>
+              <span>Quiénes Somos</span>
             </a>
-          </nav>
-             <!-- Contactenos -->
-            <a href="{{ url_for('nosotros') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
-              hover:bg-brand-100/60 dark:hover:bg-ink-800
-              {% if request.endpoint=='nosotros' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
+
+            <a href="{{ url_for('contactenos', _anchor='form') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
+               hover:bg-brand-100/60 dark:hover:bg-ink-800
+               {% if request.endpoint=='contactenos' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
               <i class="fa-solid fa-envelope text-brand-600 dark:text-gold-400 text-lg"></i>
-              <span>Contactenos</span>
+              <span>Contáctenos</span>
             </a>
+
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="{{ url_for('admin_contactos') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
+               hover:bg-brand-100/60 dark:hover:bg-ink-800
+               {% if request.endpoint=='admin_contactos' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
+              <i class="fa-solid fa-inbox text-brand-600 dark:text-gold-400 text-lg"></i>
+              <span>Contactos (Admin)</span>
+            </a>
+            {% endif %}
+          </nav>
 
           <div class="mt-auto p-4 text-xs text-brand-700/70 dark:text-gold-300/70">
             &copy; {{ 2025 }} Dinobrew · Sin excusas
@@ -234,7 +230,6 @@
         </aside>
       </div>
 
-      <!-- Drawer móvil -->
       <div id="drawerBackdrop" class="drawer backdrop md:hidden"></div>
       <aside id="drawerPanel" class="drawer panel md:hidden
                     bg-white dark:bg-ink-900 border-r border-brand-100/60 dark:border-ink-700">
@@ -250,19 +245,16 @@
         </div>
 
         <nav class="p-3 space-y-1 text-sm">
-          <!-- Inicio -->
           <a href="{{ url_for('index') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-house mr-2 text-brand-600 dark:text-gold-400"></i>
             Inicio
           </a>
 
-          <!-- Producto -->
           <a href="{{ url_for('producto') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-bottle-droplet mr-2 text-brand-600 dark:text-gold-400"></i>
             Producto
           </a>
 
-          <!-- DinoAnalyticsML -->
           {% if current_user.is_authenticated %}
           <a href="{{ url_for('entendimiento') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-boxes-stacked mr-2 text-brand-600 dark:text-gold-400"></i>
@@ -270,16 +262,25 @@
           </a>
           {% endif %}
 
-          <!-- Nosotros -->
           <a href="{{ url_for('nosotros') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-users mr-2 text-brand-600 dark:text-gold-400"></i>
-            Quines Somos
+            Quiénes Somos
           </a>
 
+          <a href="{{ url_for('contactenos', _anchor='form') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
+            <i class="fa-solid fa-envelope mr-2 text-brand-600 dark:text-gold-400"></i>
+            Contáctenos
+          </a>
+
+          {% if current_user.is_authenticated and current_user.is_admin %}
+          <a href="{{ url_for('admin_contactos') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
+            <i class="fa-solid fa-inbox mr-2 text-brand-600 dark:text-gold-400"></i>
+            Contactos (Admin)
+          </a>
+          {% endif %}
         </nav>
       </aside>
 
-      <!-- Contenido -->
       <main class="max-w-7xl mx-auto w-full px-4 py-6">
         {% block content %}{% endblock %}
       </main>
@@ -287,14 +288,12 @@
   </div>
 
   <script>
-    // Tema
     document.getElementById('themeToggle')?.addEventListener('click', () => {
       const cl = document.documentElement.classList;
       const isDark = cl.toggle('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 
-    // Ajustar top overlay según header
     function setHeaderHeightVar() {
       const h = document.getElementById('appHeader')?.offsetHeight || 64;
       document.documentElement.style.setProperty('--header-h', h + 'px');
@@ -302,7 +301,6 @@
     window.addEventListener('load', setHeaderHeightVar);
     window.addEventListener('resize', setHeaderHeightVar);
 
-    // Drawer móvil
     const html = document.documentElement;
     const btnMenu = document.getElementById('btnMenu');
     const btnClose = document.getElementById('btnCloseDrawer');

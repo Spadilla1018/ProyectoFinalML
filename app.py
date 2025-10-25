@@ -18,7 +18,11 @@ import enum
 import pymysql
 import os
 import io
+import csv
 import json
+import smtplib
+from email.message import EmailMessage
+
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -185,7 +189,7 @@ class FermentationReading(db.Model):
     batch_id = db.Column(db.Integer, db.ForeignKey("batches.id"), nullable=False)
     ts = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     temp_c = db.Column(db.Float, nullable=True)
-    sg = db.Column(db.Float, nullable=True)
+    sg = db.Column(db.Float, nullable=True)     # <-- corregido
     ph = db.Column(db.Float, nullable=True)
     notes = db.Column(db.String(200), nullable=True)
 
@@ -238,6 +242,25 @@ class MLRun(db.Model):
     created_at = db.Column(db.DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="runs")
+
+
+# ----------------------------------
+# NUEVO: Mensajes de contacto
+# ----------------------------------
+class ContactMessage(db.Model):
+    __tablename__ = "contact_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(255), nullable=False)
+    subject = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=func.now())
+    ip = db.Column(db.String(64), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    emailed = db.Column(db.Boolean, nullable=False, server_default="0")
+
+    user = relationship("User")
 
 
 # ----------------------------------
@@ -1562,12 +1585,128 @@ def producto_ficha():
 # NUEVA RUTA PÚBLICA: Nosotros
 @app.get("/nosotros")
 def nosotros():
-    # Página informativa del equipo / proyecto.
     return render_template("nosotros.html", title="Nosotros")
+
+
+# ----------------------------------
+# NUEVO: enviar email
+# ----------------------------------
+def send_contact_email(cm: ContactMessage) -> bool:
+    """Devuelve True si se envió OK, False si falló."""
+    enabled = os.getenv("MAIL_ENABLED", "1") == "1"
+    if not enabled:
+        return False
+
+    smtp_host = os.getenv("SMTP_HOST", "")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_pass = os.getenv("SMTP_PASSWORD", "")
+    use_tls = os.getenv("SMTP_USE_TLS", "1") == "1"
+    to_addr = os.getenv("MAIL_TO", "contacto@dinobrew.com")
+
+    if not smtp_host or not to_addr:
+        return False
+
+    msg = EmailMessage()
+    msg["Subject"] = f"[Dinobrew] {cm.subject}"
+    msg["From"] = smtp_user or to_addr
+    msg["To"] = to_addr
+
+    body = (
+        f"Nuevo mensaje de contacto\n\n"
+        f"Nombre: {cm.name}\n"
+        f"Email: {cm.email}\n"
+        f"Asunto: {cm.subject}\n"
+        f"IP: {cm.ip or '-'}\n"
+        f"Usuario ID: {cm.user_id or '-'}\n"
+        f"Fecha: {cm.created_at}\n\n"
+        f"Mensaje:\n{cm.message}\n"
+    )
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            if use_tls:
+                server.starttls()
+            if smtp_user and smtp_pass:
+                server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        app.logger.error(f"SMTP error: {e}")
+        return False
+
+
+# ----------------------------------
+# NUEVA RUTA PÚBLICA: Contáctenos
+# ----------------------------------
+@app.route("/contactenos", methods=["GET", "POST"])
+def contactenos():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        subject = request.form.get("subject", "").strip()
+        message = request.form.get("message", "").strip()
+
+        if not all([name, email, subject, message]):
+            flash("Completa todos los campos.", "warning")
+            return redirect(url_for("contactenos", _anchor="form"))
+
+        cm = ContactMessage(
+            name=name,
+            email=email,
+            subject=subject,
+            message=message,
+            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
+            user_id=getattr(current_user, "id", None)
+        )
+        db.session.add(cm)
+        db.session.commit()
+
+        sent = send_contact_email(cm)
+        if sent:
+            cm.emailed = True
+            db.session.commit()
+            flash("¡Gracias! Tu mensaje fue enviado y registrado correctamente.", "success")
+        else:
+            flash("Tu mensaje fue guardado. (Aviso: el envío de correo no se pudo completar).", "warning")
+
+        return redirect(url_for("contactenos", _anchor="form"))
+
+    return render_template("contactenos.html", title="Contáctenos")
+
+
+# ----------------------------------
+# NUEVO: Admin de mensajes de contacto
+# ----------------------------------
+@app.get("/admin/contactos")
+@login_required
+@admin_required
+def admin_contactos():
+    msgs = ContactMessage.query.order_by(ContactMessage.id.desc()).limit(500).all()
+    return render_template("admin_contactos.html", title="Contactos", msgs=msgs)
+
+
+@app.get("/admin/contactos/export.csv")
+@login_required
+@admin_required
+def admin_contactos_export():
+    msgs = ContactMessage.query.order_by(ContactMessage.id.asc()).all()
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["id","created_at","name","email","subject","message","ip","user_id","emailed"])
+    for m in msgs:
+        w.writerow([
+            m.id, m.created_at, m.name, m.email, m.subject,
+            m.message.replace("\n"," ").strip(), m.ip, m.user_id, int(bool(m.emailed))
+        ])
+    mem = io.BytesIO(buf.getvalue().encode("utf-8"))
+    mem.seek(0)
+    return send_file(mem, mimetype="text/csv", as_attachment=True, download_name="contact_messages.csv")
 
 
 # ----------------------------------
 # Run
 # ----------------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)                                
+    app.run(debug=True, port=5000)
