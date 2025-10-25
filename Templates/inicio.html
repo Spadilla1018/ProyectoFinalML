@@ -72,7 +72,7 @@
       </form>
     </div>
     {% else %}
-    <!-- Si no está autenticado, puedes poner un CTA suave -->
+    <!-- Si no está autenticado, CTA suave -->
     <div class="glass rounded-2xl p-6 max-w-lg mx-auto border border-white/20">
       <p class="text-white/90 mb-4">Inicia sesión para cargar tu dataset y ver el entendimiento.</p>
       <a href="{{ url_for('login') }}"
@@ -137,32 +137,49 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+      <!-- Card 1 -->
       <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" alt="Cerveza artesanal" class="w-full h-full object-cover">
+        <div class="relative flex items-center justify-center bg-black dark:bg-ink-900 h-64 md:h-80">
+          <img
+            src="{{ url_for('static', filename='img/beer_hero.jpg') }}"
+            alt="Cerveza artesanal"
+            class="max-h-full max-w-full object-contain"
+          />
           <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
             <p class="text-white font-medium">Cerveza Artesanal</p>
           </div>
         </div>
       </div>
 
+      <!-- Card 2 -->
       <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/fresas.jpg') }}" alt="Fresas" class="w-full h-full object-cover">
+        <div class="relative flex items-center justify-center bg-black dark:bg-ink-900 h-64 md:h-80">
+          <img
+            src="{{ url_for('static', filename='img/fresas.jpg') }}"
+            alt="Fresas"
+            class="max-h-full max-w-full object-contain"
+          />
           <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
             <p class="text-white font-medium">Fresas Frescas</p>
           </div>
         </div>
       </div>
 
+      <!-- Card 3 -->
       <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/moras.png') }}" alt="Moras" class="w-full h-full object-cover">
+        <div class="relative flex items-center justify-center bg-black dark:bg-ink-900 h-64 md:h-80">
+          <img
+            src="{{ url_for('static', filename='img/moras.png') }}"
+            alt="Moras"
+            class="max-h-full max-w-full object-contain"
+          />
           <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
             <p class="text-white font-medium">Moras Selectas</p>
           </div>
         </div>
       </div>
+
     </div>
 
     <div class="max-w-3xl mx-auto text-center glass p-8 rounded-2xl shadow-soft border border-white/30 dark:border-gold-700/30">
@@ -213,7 +230,7 @@
 <section class="py-20 md:py-28 text-white relative overflow-hidden
                 bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 dark:from-ink-900 dark:via-ink-800 dark:to-ink-900">
   <!-- elementos decorativos -->
-  <div class="absolute inset-0 opacity-10">
+  <div class="absolute inset-0 opacity-10 pointer-events-none">
     <div class="absolute top-10 left-10 w-64 h-64 rounded-full bg-white"></div>
     <div class="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-white"></div>
   </div>

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero / Encabezado -->
+<section class="min-h-[40vh] flex items-center justify-center relative overflow-hidden rounded-3xl shadow-soft border border-gold-400/20 bg-black">
+  <!-- overlay negro dorado -->
+  <div class="absolute inset-0 bg-gradient-to-b from-black via-black/95 to-black"></div>
+
+  <div class="relative z-10 max-w-5xl w-full px-6 text-center">
+    <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-gold-400/30 bg-black/40 shadow-gold">
+      <i class="fa-solid fa-people-group text-gold-400 text-lg"></i>
+      <span class="text-gold-300 tracking-wide text-sm uppercase">Nosotros</span>
+    </div>
+
+    <h1 class="mt-5 text-3xl md:text-5xl font-extrabold leading-tight text-white">
+      DINOBREW · Cerveza artesanal <span class="text-gold-400">sin alcohol</span>
+    </h1>
+
+    <p class="mt-4 text-slate-300/90 max-w-3xl mx-auto text-base md:text-lg">
+      Nacimos como un proyecto académico que evolucionó a marca: una propuesta
+      auténtica, con identidad fuerte y sabores innovadores, pensada para quienes
+      buscan disfrutar sin compromisos.
+    </p>
+
+    <p class="mt-3 text-gold-300 font-semibold text-sm md:text-base">
+      “Sofisticada. Sin alcohol. Sin excusas.”
+    </p>
+  </div>
+</section>
+
+<!-- Historia + Propósito -->
+<section class="py-10 md:py-14">
+  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-6">
+
+    <!-- Nuestra historia -->
+    <article class="glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+        <i class="fa-solid fa-seedling text-gold-400"></i>
+        Nuestra historia
+      </h2>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        DINOBREW surge en el aula y se consolida en la práctica: un emprendimiento
+        que combina investigación, diseño de marca y pasión por la innovación.
+        Apostamos por una experiencia con carácter —sin alcohol— y perfil premium.
+      </p>
+
+      <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        <li class="flex gap-2">
+          <i class="fa-solid fa-check text-gold-400 mt-1"></i>
+          <span>Enfoque artesanal con control de calidad y diferenciación.</span>
+        </li>
+        <li class="flex gap-2">
+          <i class="fa-solid fa-check text-gold-400 mt-1"></i>
+          <span>Innovación en sabores y propuesta visual con personalidad.</span>
+        </li>
+        <li class="flex gap-2">
+          <i class="fa-solid fa-check text-gold-400 mt-1"></i>
+          <span>Comunidad: construimos experiencias, no solo productos.</span>
+        </li>
+      </ul>
+    </article>
+
+    <!-- Propósito y valores -->
+    <article class="glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+        <i class="fa-solid fa-bullseye text-gold-400"></i>
+        Propósito y valores
+      </h2>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        Queremos demostrar que una cerveza sin alcohol puede ser intensa y respetada.
+        Lo hacemos desde la autenticidad, el diseño y la responsabilidad.
+      </p>
+
+      <div class="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Autenticidad</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
+            Sabores con historia y carácter, sin concesiones.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Calidad</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
+            Procesos cuidados y consistentes, experiencia premium.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Innovación</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
+            Experimentación responsable en sabores y branding.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Comunidad</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
+            Colaboraciones, degustaciones y escucha activa.
+          </p>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- Identidad de Marca -->
+<section class="py-10 md:py-14">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+          <i class="fa-solid fa-shield-halved text-gold-400"></i>
+          Identidad de marca
+        </h2>
+        <span class="text-brand-700/80 dark:text-gold-300/90 text-sm">
+          Dorado metálico + negro · Elegancia y carácter
+        </span>
+      </div>
+
+      <div class="mt-6 grid md:grid-cols-4 gap-6 text-sm">
+
+        <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Nombre</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            <strong>DINOBREW</strong>: fuerza y rudeza (“DINO”) + oficio cervecero (“BREW”).
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Eslogan</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            “Sofisticada. Sin alcohol. Sin excusas.”
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Tipografía</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Serif elegante y sólida, percepción premium y atemporal.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Símbolos</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Gota dorada + marcas de garra: intensidad, pureza y respeto por lo artesanal.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Para quién es DINOBREW -->
+<section class="py-10 md:py-14">
+  <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-6">
+
+    <!-- Nuestro público -->
+    <div class="lg:col-span-2 glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+        <i class="fa-solid fa-user-group text-gold-400"></i>
+        Nuestro público
+      </h2>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        DINOBREW dialoga con generaciones que valoran la autenticidad y la salud
+        sin renunciar al estilo: <strong>Gen Z</strong> y <strong>Millennials</strong>.
+      </p>
+
+      <div class="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Estilo de vida activo</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Bienestar, deporte y consumo consciente.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Experiencias con diseño</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Packaging, branding y narrativa de marca.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Curiosidad por sabores</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Ediciones limitadas y maridajes.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="font-semibold text-brand-900 dark:text-white">Cero alcohol</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Disfrute sin comprometer rutinas ni objetivos.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dónde estamos -->
+    <aside class="glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <h3 class="text-xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+        <i class="fa-solid fa-location-dot text-gold-400"></i>
+        Dónde estamos
+      </h3>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        Presencia digital y activaciones locales con degustaciones, alianzas con cafés,
+        gimnasios y espacios culturales. Construimos comunidad paso a paso.
+      </p>
+
+      <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        <li class="flex gap-2">
+          <i class="fa-solid fa-bolt text-gold-400 mt-1"></i>
+          <span>Degustaciones y pop-ups</span>
+        </li>
+        <li class="flex gap-2">
+          <i class="fa-solid fa-dumbbell text-gold-400 mt-1"></i>
+          <span>Alianzas fitness &amp; bienestar</span>
+        </li>
+        <li class="flex gap-2">
+          <i class="fa-solid fa-mug-hot text-gold-400 mt-1"></i>
+          <span>Colaboraciones con cafeterías</span>
+        </li>
+      </ul>
+    </aside>
+
+  </div>
+</section>
+
+<!-- Cómo trabajamos -->
+<section class="py-10 md:py-14">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="glass rounded-3xl p-6 border border-white/10 shadow-soft">
+      <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
+        <i class="fa-solid fa-calendar-check text-gold-400"></i>
+        Cómo trabajamos
+      </h2>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+        Operamos con ciclos de 12 semanas que combinan visibilidad, posicionamiento y conversión:
+      </p>
+
+      <div class="mt-5 grid md:grid-cols-3 gap-4 text-sm">
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="text-brand-900 dark:text-white font-semibold">Mes 1 · Presencia</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Lanzamiento social, teasers, reels de proceso y micro-influencers.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="text-brand-900 dark:text-white font-semibold">Mes 2 · Experiencia</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            UGC “Mi momento DINOBREW”, beneficios saludables, WhatsApp Business.
+          </p>
+        </div>
+
+        <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40">
+          <h3 class="text-brand-900 dark:text-white font-semibold">Mes 3 · Conversión</h3>
+          <p class="text-brand-800 dark:text-slate-300 mt-1">
+            Ediciones limitadas, pop-ups, referidos y retargeting.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-12">
+  <div class="max-w-4xl mx-auto px-6 text-center">
+    <div class="glass rounded-3xl p-8 border border-gold-400/20 shadow-soft">
+      <h2 class="text-2xl md:text-3xl font-extrabold text-brand-900 dark:text-white">
+        ¿Quieres probar la siguiente edición limitada?
+      </h2>
+
+      <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
+        Súmate a la comunidad y cuéntanos qué sabor te gustaría ver en la próxima temporada.
+      </p>
+
+      <a href="#"
+         class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-2xl border border-brand-700/30 bg-white/80 text-brand-900 hover:bg-white dark:border-gold-400/20 dark:bg-black/50 dark:text-gold-200 dark:hover:bg-black/70 transition text-sm font-medium shadow-gold">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>Contáctanos</span>
+      </a>
+    </div>
+
+    <div class="text-[11px] text-brand-700/70 dark:text-gold-300/70 mt-6">
+      Proyecto académico — Universidad de Cundinamarca &amp; Universidad de Loja — 0.0% ABV
+    </div>
+  </div>
+</section>
+
+{% endblock %}
