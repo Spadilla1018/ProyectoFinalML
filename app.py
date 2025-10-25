@@ -1,3 +1,13 @@
+import os
+import io
+import csv
+import json
+import smtplib
+import logging
+from datetime import datetime, date
+from email.message import EmailMessage
+from functools import wraps
+
 from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, jsonify, send_file, abort, session
@@ -9,20 +19,10 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import inspect, text, func
-from functools import wraps
-from datetime import datetime, date
 from sqlalchemy.orm import relationship
 from sqlalchemy import Enum as SAEnum
-from jinja2 import TemplateNotFound  # <--- para fallback de template
+from jinja2 import TemplateNotFound
 import enum
-
-# ---- stdlib / terceros
-import os
-import io
-import csv
-import json
-import smtplib
-from email.message import EmailMessage
 
 import pandas as pd
 import numpy as np
@@ -56,7 +56,10 @@ from sklearn.metrics import (
 import joblib
 
 
-BASE_DIR = os.path.dirname(__file__)
+# -------------------------------------------------------------------
+# Rutas base absolutas (robusto para Render)
+# -------------------------------------------------------------------
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -66,43 +69,36 @@ MODELS_DIR = os.path.join(UPLOAD_DIR, "models")
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
 
-# Evitar cache de estáticos en dev (imágenes)
+# Evitar cache de archivos estáticos en dev
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
-# -----------------------------------------------------------------------------
-# CONFIG DB (Render / local)
-# -----------------------------------------------------------------------------
-# Si Render define DATABASE_URL úsala (p.ej. Postgres). Si no, puedes forzar MySQL
-# local con USE_MYSQL_LOCAL=1. En caso contrario, se usa SQLite en un archivo.
+# -------------------------------------------------------------------
+# Config DB: Render (DATABASE_URL) | local MySQL (USE_MYSQL_LOCAL) | SQLite
+# -------------------------------------------------------------------
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 USE_MYSQL_LOCAL = os.getenv("USE_MYSQL_LOCAL", "0") == "1"
 
 if DATABASE_URL:
-    # Normaliza Postgres si viene como postgres://
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 else:
     if USE_MYSQL_LOCAL:
-        # --- MySQL local (XAMPP/WAMP)
         DB_NAME = os.getenv("DB_NAME", "ml_dashboard")
         DB_USER = os.getenv("DB_USER", "root")
         DB_PASS = os.getenv("DB_PASS", "")
         DB_HOST = os.getenv("DB_HOST", "localhost")
         DB_PORT = int(os.getenv("DB_PORT", "3306"))
-
-        # NO intentamos crear la base automáticamente: en algunos entornos falla.
         app.config["SQLALCHEMY_DATABASE_URI"] = (
             f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
         )
     else:
-        # --- SQLite (seguro para Render si no hay DB externa)
         SQLITE_PATH = os.path.join(BASE_DIR, "dinobrew.db")
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{SQLITE_PATH}"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Dirs
+# Crear dirs necesarios
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(IMG_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -110,17 +106,26 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
-db = SQLAlchemy(app)
+# -------------------------------------------------------------------
+# Logging útil para depuración en Render
+# -------------------------------------------------------------------
+app.logger.setLevel(logging.INFO)
+app.logger.info(f"BASE_DIR: {BASE_DIR}")
+app.logger.info(f"TEMPLATES_DIR: {TEMPLATES_DIR} (exists={os.path.isdir(TEMPLATES_DIR)})")
+try:
+    app.logger.info(f"templates list: {os.listdir(TEMPLATES_DIR)}")
+except Exception as e:
+    app.logger.info(f"No se pudo listar templates: {e}")
 
+# -------------------------------------------------------------------
+# DB
+# -------------------------------------------------------------------
+db = SQLAlchemy(app)
 
 # ----------------------------------
 # Login
 # ----------------------------------
 login_manager = LoginManager(app)
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 login_manager.login_view = "login"
 login_manager.login_message_category = "warning"
 
@@ -144,12 +149,16 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
 # ----------------------------------
 # Entidades de producción (lotes)
 # ----------------------------------
 class Flavor(db.Model):
     __tablename__ = "flavors"
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
 
@@ -402,6 +411,24 @@ def admin_required(f):
 
 
 # ----------------------------------
+# Depuración: listar templates desplegados
+# ----------------------------------
+@app.get("/_debug/templates")
+def _debug_templates():
+    try:
+        files = os.listdir(TEMPLATES_DIR)
+    except Exception as e:
+        files = [f"Error listando templates: {e}"]
+    return {
+        "root_path": app.root_path,
+        "BASE_DIR": BASE_DIR,
+        "TEMPLATES_DIR": TEMPLATES_DIR,
+        "templates_exists": os.path.isdir(TEMPLATES_DIR),
+        "templates_files": files
+    }
+
+
+# ----------------------------------
 # Auth routes
 # ----------------------------------
 @app.route("/register", methods=["GET", "POST"])
@@ -507,7 +534,7 @@ def admin_users_create():
 # ----------------------------------
 @app.get("/")
 def index():
-    # Renderiza inicio.html; si no existe, deja log y muestra fallback para no romper.
+    # Renderiza inicio.html; si no existe, deja log y muestra fallback sin 500.
     try:
         return render_template("inicio.html", title="Inicio", filename=CURRENT_FILENAME)
     except TemplateNotFound as e:
@@ -522,6 +549,7 @@ def index():
         except Exception as log_e:
             app.logger.error(f"No se pudo listar templates: {log_e}")
 
+        # Fallback amigable
         return (
             """
             <!doctype html>
@@ -531,10 +559,12 @@ def index():
               <body style="font-family:system-ui;padding:24px">
                 <h1>DinoBrew</h1>
                 <p>No se encontró <code>templates/inicio.html</code> en el servidor.</p>
+                <p>Abre <code>/_debug/templates</code> para ver qué archivos llegaron a Render.</p>
                 <ul>
                   <li>Verifica que el archivo esté <strong>commiteado</strong> y <strong>pusheado</strong>.</li>
                   <li>Confirma que la carpeta es <code>templates/</code> y el nombre exacto es <code>inicio.html</code>.</li>
                   <li>Revisa que <code>.gitignore</code> / <code>.renderignore</code> no excluyan <code>templates/</code>.</li>
+                  <li>Si es monorepo, ajusta el <em>Root Directory</em> en Render.</li>
                 </ul>
               </body>
             </html>
@@ -626,19 +656,13 @@ def api_column_data():
             return jsonify({"error": "La columna no tiene datos numéricos válidos."}), 400
 
         counts, edges = np.histogram(s, bins=bins)
-        labels = [
-            f"{edges[i]:.2f} – {edges[i+1]:.2f}"
-            for i in range(len(edges) - 1)
-        ]
+        labels = [f"{edges[i]:.2f} – {edges[i+1]:.2f}" for i in range(len(edges) - 1)]
         return jsonify({"labels": labels, "values": counts.tolist()})
 
     if mode == "counts":
         s = CURRENT_DF[col].astype(str).fillna("NaN")
         vc = s.value_counts().head(30)
-        return jsonify({
-            "labels": vc.index.tolist(),
-            "values": vc.values.tolist()
-        })
+        return jsonify({"labels": vc.index.tolist(), "values": vc.values.tolist()})
 
     return jsonify({"error": "Modo inválido. Usa 'hist' o 'counts'."}), 400
 
@@ -794,7 +818,8 @@ def abv_estimate(og: float | None, fg: float | None):
 @login_required
 def batches_list():
     batches = Batch.query.order_by(Batch.id.desc()).all()
-    flavors = Flavor.query_order = Flavor.query.order_by(Flavor.name).all()
+    # FIX: quitar asignación errónea a atributo y dejar sólo la consulta:
+    flavors = Flavor.query.order_by(Flavor.name).all()
     return render_template("batches.html", batches=batches, flavors=flavors, title="Lotes")
 
 
@@ -1032,12 +1057,16 @@ def api_ml_train():
         if not task:
             task = infer_task_from_target(y)
 
+        # clasificación → y string si no es numérica
         if task == "classification":
             if not pd.api.types.is_numeric_dtype(y):
                 y = y.astype(str)
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state,
+            X,
+            y,
+            test_size=test_size,
+            random_state=random_state,
             stratify=y if task == "classification" else None
         )
 
@@ -1057,13 +1086,26 @@ def api_ml_train():
             mse = mean_squared_error(y_test, y_pred)
             rmse = float(np.sqrt(mse))
             r2 = r2_score(y_test, y_pred)
-            metrics = {"MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2}
+
+            metrics = {
+                "MAE": mae,
+                "MSE": mse,
+                "RMSE": rmse,
+                "R2": r2
+            }
         else:
             acc = accuracy_score(y_test, y_pred)
-            prec = precision_score(y_test, y_pred, average="macro", zero_division=0)
-            rec = recall_score(y_test, y_pred, average="macro", zero_division=0)
-            f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
+            prec = precision_score(
+                y_test, y_pred, average="macro", zero_division=0
+            )
+            rec = recall_score(
+                y_test, y_pred, average="macro", zero_division=0
+            )
+            f1 = f1_score(
+                y_test, y_pred, average="macro", zero_division=0
+            )
             cm = confusion_matrix(y_test, y_pred).tolist()
+
             metrics = {
                 "accuracy": acc,
                 "precision_macro": prec,
@@ -1072,9 +1114,13 @@ def api_ml_train():
                 "confusion_matrix": cm
             }
 
+        # Construir esquema simple para predicción
         schema = {}
         for c in features:
-            schema[c] = "number" if pd.api.types.is_numeric_dtype(X[c]) else "string"
+            if pd.api.types.is_numeric_dtype(X[c]):
+                schema[c] = "number"
+            else:
+                schema[c] = "string"
 
         run = MLRun(
             user_id=getattr(current_user, "id", None),
@@ -1117,7 +1163,10 @@ def api_ml_train():
 def api_ml_runs():
     q = MLRun.query
     if not getattr(current_user, "is_admin", False):
-        q = q.filter((MLRun.user_id == current_user.id) | (MLRun.user_id.is_(None)))
+        q = q.filter(
+            (MLRun.user_id == current_user.id) |
+            (MLRun.user_id.is_(None))
+        )
 
     runs = q.order_by(MLRun.id.desc()).limit(50).all()
 
@@ -1148,7 +1197,11 @@ def download_model(run_id):
         return redirect(url_for("entendimiento"))
 
     fname = f"modelo_{r.task}_{r.algorithm}_run{r.id}.joblib"
-    return send_file(r.model_path, as_attachment=True, download_name=fname)
+    return send_file(
+        r.model_path,
+        as_attachment=True,
+        download_name=fname
+    )
 
 
 # ----------------------------------
@@ -1204,6 +1257,7 @@ def predict_submit(run_id):
     try:
         y_pred = pipe.predict(X_infer)
         y_proba = None
+
         try:
             y_proba = pipe.predict_proba(X_infer)[0].tolist()
         except Exception:
@@ -1249,19 +1303,30 @@ def producto_folleto():
 
     try:
         if os.path.exists(udec_path):
-            c.drawImage(ImageReader(udec_path), x, y - logo_h, width=120, height=logo_h,
-                        preserveAspectRatio=True, mask='auto')
+            c.drawImage(
+                ImageReader(udec_path),
+                x, y - logo_h,
+                width=120, height=logo_h,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
     except Exception:
         pass
 
     try:
         if os.path.exists(loja_path):
-            c.drawImage(ImageReader(loja_path), width - margin - 120, y - logo_h,
-                        width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
+            c.drawImage(
+                ImageReader(loja_path),
+                width - margin - 120, y - logo_h,
+                width=120, height=logo_h,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
     except Exception:
         pass
 
     y -= (logo_h + 16)
+
     c.setFillColor(colors.HexColor("#065f46"))
     c.setFont("Helvetica-Bold", 18)
     c.drawString(x, y, "Cerveza Artesanal Sin Alcohol · Fresa & Mora")
@@ -1347,9 +1412,13 @@ def producto_folleto():
         qr_buf.seek(0)
 
         qr_size = 120
-        c.drawImage(ImageReader(qr_buf),
-                    width - margin - qr_size, y - qr_size + 10,
-                    width=qr_size, height=qr_size, mask='auto')
+        c.drawImage(
+            ImageReader(qr_buf),
+            width - margin - qr_size,
+            y - qr_size + 10,
+            width=qr_size, height=qr_size,
+            mask='auto'
+        )
 
         c.setFont("Helvetica", 9)
         c.drawRightString(width - margin, y - qr_size - 4, "Escanea para saber más")
@@ -1391,15 +1460,25 @@ def producto_ficha():
 
     try:
         if os.path.exists(udec_path):
-            c.drawImage(ImageReader(udec_path), x, y - logo_h,
-                        width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
+            c.drawImage(
+                ImageReader(udec_path),
+                x, y - logo_h,
+                width=120, height=logo_h,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
     except Exception:
         pass
 
     try:
         if os.path.exists(loja_path):
-            c.drawImage(ImageReader(loja_path), width - margin - 120, y - logo_h,
-                        width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
+            c.drawImage(
+                ImageReader(loja_path),
+                width - margin - 120, y - logo_h,
+                width=120, height=logo_h,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
     except Exception:
         pass
 
@@ -1450,7 +1529,11 @@ def producto_ficha():
     for k, v in specs:
         y_cursor -= row_h
         c.setFillColor(colors.white)
-        c.rect(table_x, y_cursor, col1_w + col2_w, row_h, fill=1, stroke=1)
+        c.rect(
+            table_x, y_cursor,
+            col1_w + col2_w, row_h,
+            fill=1, stroke=1
+        )
 
         c.setFillColor(colors.black)
         c.drawString(table_x + 6, y_cursor + 5, k)
@@ -1510,12 +1593,20 @@ def producto_ficha():
         qr_buf.seek(0)
 
         qr_size = 120
-        c.drawImage(ImageReader(qr_buf),
-                    width - margin - qr_size, y - qr_size + 10,
-                    width=qr_size, height=qr_size, mask='auto')
+        c.drawImage(
+            ImageReader(qr_buf),
+            width - margin - qr_size,
+            y - qr_size + 10,
+            width=qr_size, height=qr_size,
+            mask='auto'
+        )
 
         c.setFont("Helvetica", 9)
-        c.drawRightString(width - margin, y - qr_size - 4, "Escanea esta ficha técnica")
+        c.drawRightString(
+            width - margin,
+            y - qr_size - 4,
+            "Escanea esta ficha técnica"
+        )
     except Exception:
         pass
 
