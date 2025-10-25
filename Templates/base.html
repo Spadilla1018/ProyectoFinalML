@@ -112,9 +112,10 @@
             </button>
 
             <button id="themeToggle" class="inline-flex items-center justify-center w-10 h-10 rounded-lg
-                                           hover:bg-white/70 dark:hover:bg-ink-700 border border-white/40 dark:border-ink-700" title="Tema">
-              <i class="ti ti-moon-stars dark:hidden text-brand-700"></i>
-              <i class="ti ti-sun hidden dark:inline text-gold-400"></i>
+                                           hover:bg-white/70 dark:hover:bg-ink-700 border border-white/40 dark:border-ink-700"
+                    title="Tema" aria-pressed="false">
+              <i id="iconMoon" class="ti ti-moon-stars text-brand-700 dark:hidden"></i>
+              <i id="iconSun"  class="ti ti-sun text-gold-400 hidden dark:inline"></i>
             </button>
 
             {% if current_user.is_authenticated %}

@@ -4,9 +4,7 @@
 <!-- Hero Section con carrusel de imágenes -->
 <section
   class="hero min-h-[80vh] md:min-h-screen flex items-center justify-center text-center text-brand-900 dark:text-gold-50 relative bg-cover bg-center overflow-hidden"
-  style="background-image:
-         linear-gradient(rgba(12,12,12,0.45), rgba(12,12,12,0.55)),
-         url('{{ url_for('static', filename='img/beer_hero.jpg') }}');">
+  style="background-image: linear-gradient(rgba(12,12,12,0.45), rgba(12,12,12,0.55)), url('{{ url_for('static', filename='img/beer_hero.jpg') }}');">
 
   <!-- Contenedor del carrusel -->
   <div class="absolute inset-0 z-0">
@@ -29,6 +27,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- velo superior con degradado de la marca -->
   <div class="absolute inset-0 bg-gradient-to-t from-brand-900/60 via-ink-900/50 to-transparent dark:from-ink-900/70 dark:via-ink-800/60 z-0"></div>
@@ -254,4 +253,4 @@
   })();
 </script>
 
-{% endblock %}
+{% endblock %
