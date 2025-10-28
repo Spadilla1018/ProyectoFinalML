@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, date
 from email.message import EmailMessage
 from functools import wraps
+from urllib.parse import quote_plus  # <-- sigue igual
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -55,9 +56,12 @@ from sklearn.metrics import (
 )
 import joblib
 
+# ---- .env (para que al ejecutar python app.py se carguen variables)
+from dotenv import load_dotenv
+load_dotenv()
 
 # -------------------------------------------------------------------
-# Rutas base absolutas (robusto para Render)
+# Rutas base absolutas
 # -------------------------------------------------------------------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
@@ -73,30 +77,33 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
 # -------------------------------------------------------------------
-# Config DB: Render (DATABASE_URL) | local MySQL (USE_MYSQL_LOCAL) | SQLite
+# Config DB: SOLO MySQL (sin SQLite)
 # -------------------------------------------------------------------
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
-USE_MYSQL_LOCAL = os.getenv("USE_MYSQL_LOCAL", "0") == "1"
+DB_NAME = os.getenv("DB_NAME", "ml_dashboard")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASS = os.getenv("DB_PASS", "")
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
 
-if DATABASE_URL:
-    if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
-    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+from urllib.parse import quote_plus
+DB_PASS_Q = quote_plus(DB_PASS)
+
+# >>> NUEVO: si no hay password, no lo incluimos en la URI
+if DB_PASS:
+    auth = f"{DB_USER}:{DB_PASS_Q}@"
 else:
-    if USE_MYSQL_LOCAL:
-        DB_NAME = os.getenv("DB_NAME", "ml_dashboard")
-        DB_USER = os.getenv("DB_USER", "root")
-        DB_PASS = os.getenv("DB_PASS", "")
-        DB_HOST = os.getenv("DB_HOST", "localhost")
-        DB_PORT = int(os.getenv("DB_PORT", "3306"))
-        app.config["SQLALCHEMY_DATABASE_URI"] = (
-            f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        )
-    else:
-        SQLITE_PATH = os.path.join(BASE_DIR, "dinobrew.db")
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{SQLITE_PATH}"
+    auth = f"{DB_USER}@"
+
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"mysql+pymysql://{auth}{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
+)
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Conexión más robusta (evita 'MySQL server has gone away')
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 280,
+}
 
 # Crear dirs necesarios
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -107,7 +114,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 # -------------------------------------------------------------------
-# Logging útil para depuración en Render
+# Logging útil
 # -------------------------------------------------------------------
 app.logger.setLevel(logging.INFO)
 app.logger.info(f"BASE_DIR: {BASE_DIR}")
@@ -117,10 +124,34 @@ try:
 except Exception as e:
     app.logger.info(f"No se pudo listar templates: {e}")
 
+# Mask DB URI in logs
+try:
+    uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    masked = uri
+    if "://" in uri and "@" in uri:
+        scheme, rest = uri.split("://", 1)
+        creds, hostpart = rest.split("@", 1)
+        masked = f"{scheme}://***:***@{hostpart}"
+    app.logger.info(f"DB URI en uso: {masked}")
+except Exception:
+    pass
+
 # -------------------------------------------------------------------
 # DB
 # -------------------------------------------------------------------
 db = SQLAlchemy(app)
+
+# --- Ruta de salud de la BD (prueba rápida) ------------------------
+@app.get("/dbcheck")
+def dbcheck():
+    try:
+        with db.engine.connect() as conn:
+            version = conn.execute(text("SELECT VERSION()")).scalar()
+            current_db = conn.execute(text("SELECT DATABASE()")).scalar()
+        return f"OK: {current_db} @ MySQL {version}"
+    except Exception as e:
+        return f"ERROR DB: {e}", 500
+# -------------------------------------------------------------------
 
 # ----------------------------------
 # Login
@@ -338,6 +369,7 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
         if algorithm == "logreg":
             model = LogisticRegression(max_iter=300)
         elif algorithm == "rf":
+            # FIX: corrección de parámetro
             model = RandomForestClassifier(n_estimators=300, random_state=42)
         elif algorithm == "knn":
             model = KNeighborsClassifier(n_neighbors=5)
@@ -559,12 +591,10 @@ def index():
               <body style="font-family:system-ui;padding:24px">
                 <h1>DinoBrew</h1>
                 <p>No se encontró <code>templates/inicio.html</code> en el servidor.</p>
-                <p>Abre <code>/_debug/templates</code> para ver qué archivos llegaron a Render.</p>
+                <p>Abre <code>/_debug/templates</code> para ver qué archivos llegaron.</p>
                 <ul>
                   <li>Verifica que el archivo esté <strong>commiteado</strong> y <strong>pusheado</strong>.</li>
                   <li>Confirma que la carpeta es <code>templates/</code> y el nombre exacto es <code>inicio.html</code>.</li>
-                  <li>Revisa que <code>.gitignore</code> / <code>.renderignore</code> no excluyan <code>templates/</code>.</li>
-                  <li>Si es monorepo, ajusta el <em>Root Directory</em> en Render.</li>
                 </ul>
               </body>
             </html>
@@ -818,7 +848,6 @@ def abv_estimate(og: float | None, fg: float | None):
 @login_required
 def batches_list():
     batches = Batch.query.order_by(Batch.id.desc()).all()
-    # FIX: quitar asignación errónea a atributo y dejar sólo la consulta:
     flavors = Flavor.query.order_by(Flavor.name).all()
     return render_template("batches.html", batches=batches, flavors=flavors, title="Lotes")
 
@@ -1756,5 +1785,5 @@ def admin_contactos_export():
 # Run (local)
 # ----------------------------------
 if __name__ == "__main__":
-    # En Render se ejecuta con Gunicorn (app:app). Este run es solo local.
+    # Ejecuta local. En servidores usa Gunicorn (app:app).
     app.run(debug=True, port=int(os.getenv("PORT", "5000")))
