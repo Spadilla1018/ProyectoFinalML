@@ -193,9 +193,9 @@
             </a>
 
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('entendimiento') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
-               hover:bg-brand-100/60 dark:hover:bg-ink-800
-               {% if request.endpoint=='entendimiento' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
+            <a href="{{ url_for('analytics') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg
+              hover:bg-brand-100/60 dark:hover:bg-ink-800
+              {% if request.endpoint=='analytics' %}bg-brand-100/60 dark:bg-ink-800{% endif %}">
               <i class="fa-solid fa-chart-line text-brand-600 dark:text-gold-400 text-lg"></i>
               <span>DinoAnalyticsML</span>
             </a>
@@ -257,7 +257,7 @@
           </a>
 
           {% if current_user.is_authenticated %}
-          <a href="{{ url_for('entendimiento') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
+          <a href="{{ url_for('analytics') }}" class="block px-3 py-2 rounded-lg hover:bg-brand-50 dark:hover:bg-ink-800">
             <i class="fa-solid fa-boxes-stacked mr-2 text-brand-600 dark:text-gold-400"></i>
             DinoAnalyticsML
           </a>

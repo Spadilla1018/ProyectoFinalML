@@ -641,27 +641,14 @@ def upload():
         return redirect(url_for("index"))
 
 
-@app.get("/entendimiento")
+@app.get("/analytics")  # Cambiamos el nombre de la ruta a /analytics
 @login_required
-def entendimiento():
-    if CURRENT_DF is None:
-        flash("No hay dataset cargado actualmente.", "warning")
-        return redirect(url_for("index"))
-
-    numeric_cols, categorical_cols, dnum, dcat = split_columns(CURRENT_DF)
-    all_cols = CURRENT_DF.columns.tolist()
-
+def analytics():  # Cambiamos el nombre de la función
+    # Ya no necesitamos verificar CURRENT_DF
     return render_template(
-        "entendimiento.html",
-        title="Entendimiento de Datos",
-        filename=CURRENT_FILENAME,
-        numeric_cols=numeric_cols,
-        categorical_cols=categorical_cols,
-        all_cols=all_cols,
-        default_numeric=dnum,
-        default_categorical=dcat
+        "analytics.html",  # Usamos la plantilla analytics.html
+        title="DinoAnalyticsML"
     )
-
 
 @app.get("/api/column-data")
 @login_required
@@ -1658,10 +1645,12 @@ def producto_ficha():
     )
 
 
-# NUEVA RUTA PÚBLICA: Nosotros
+# NUEVA RUTA PÚBLICA: Nosotros 
 @app.get("/nosotros")
 def nosotros():
     return render_template("nosotros.html", title="Nosotros")
+
+
 
 
 # ----------------------------------
@@ -1750,6 +1739,8 @@ def contactenos():
         return redirect(url_for("contactenos", _anchor="form"))
 
     return render_template("contactenos.html", title="Contáctenos")
+
+
 
 
 # ----------------------------------
