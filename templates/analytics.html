@@ -5,14 +5,15 @@
 
   <!-- Hero Section -->
   <div class="relative max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-xl mb-14">
-    <img src="{{ url_for('static', filename='img/ml_hero.jpg') }}"
-         alt="Machine Learning Analytics"
+    <!-- Imagen actualizada del segundo código -->
+    <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}"
+         alt="Cerveza artesanal sin alcohol Fresa y Mora"
          class="w-full h-96 object-cover brightness-75">
     
     <!-- Indicador de página activa -->
     <div class="absolute top-4 right-4 z-20">
       <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-600/90 backdrop-blur-sm text-white text-sm font-medium shadow-lg">
-        <i class="fa-solid fa-brain text-gold-300"></i>
+        <i class="fa-solid fa-chart-bar text-gold-300"></i>
         <span>DinoAnalyticsML</span>
       </div>
     </div>
@@ -68,81 +69,160 @@
   <section class="py-20 md:py-28 bg-white dark:bg-ink-900">
     <div class="container mx-auto px-6">
       <div class="max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-          <span class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4
-                        bg-brand-100 text-brand-700 dark:bg-ink-800 dark:text-gold-300 border border-brand-200/70 dark:border-ink-700">
-            PLATAFORMA DE MACHINE LEARNING
-          </span>
-          <h2 class="text-4xl md:text-5xl font-extrabold text-brand-700 dark:text-gold-400 mb-6">¿Qué es DinoAnalyticsML?</h2>
-        </div>
+       <div class="text-center mb-16">
+  <span class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4
+                bg-brand-100 text-brand-700 dark:bg-ink-800 dark:text-gold-300 border border-brand-200/70 dark:border-ink-700">
+    PLATAFORMA DE MACHINE LEARNING
+  </span>
+  <h2 class="text-4xl md:text-5xl font-extrabold text-brand-700 dark:text-gold-400 mb-6">DinoAnalyticsML Herramienta de Predicción</h2>
+</div>
 
-        <div class="space-y-8">
-          <div class="bg-brand-50 dark:bg-ink-800 rounded-2xl p-8 shadow-soft border-l-4 border-brand-500 transform hover:scale-[1.02] transition-transform duration-300">
-            <p class="text-brand-900/80 dark:text-gold-100 leading-relaxed text-lg">
-              <span class="font-semibold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es nuestra plataforma de Machine Learning diseñada para transformar datos en decisiones inteligentes.
-              Inspirados por la necesidad de democratizar el acceso a la inteligencia artificial, creamos una solución que combina potencia y facilidad de uso.
-              Nacida de la investigación aplicada y la innovación tecnológica, nuestra plataforma permite crear, entrenar y desplegar modelos predictivos sin necesidad de ser un experto en programación.
-            </p>
+<div class="space-y-8">
+  <div class="bg-brand-50 dark:bg-ink-800 rounded-2xl p-8 shadow-soft border-l-4 border-brand-500 transform hover:scale-[1.02] transition-transform duration-300">
+    <p class="text-brand-900/80 dark:text-gold-100 leading-relaxed text-lg">
+      <span class="font-semibold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es la plataforma exclusiva de Machine Learning diseñada para optimizar el proceso de producción.
+      Desarrollada pensando en las necesidades de DINOBREW, esta herramienta permite predecir la fecha de vencimiento de las cervezas, 
+      controlando la calidad del producto.
+    </p>
+    
+    <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
+      <li class="flex gap-2">
+        <i class="fa-solid fa-check text-gold-400 mt-1"></i>
+        <span>Acceso a modelo predictivo para el proceso productivo.</span>
+      </li>
+      <li class="flex gap-2">
+        <i class="fa-solid fa-check text-gold-400 mt-1"></i>
+        <span>Interfaz intuitiva para ingresar datos y obtener predicciones.</span>
+      </li>
+    </ul>
+  </div>
+
+
+  <div class="rounded-2xl p-8 shadow-soft bg-gradient-to-r from-brand-100 to-gold-100 dark:from-ink-800 dark:to-ink-700 transform hover:scale-[1.02] transition-transform duration-300">
+    <p class="italic text-xl font-medium text-center text-brand-900/90 dark:text-gold-100">
+      <span class="font-bold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es más que una tecnología:
+      es tu <span class="text-brand-700 dark:text-gold-300">aliado estratégico</span> para llevar la excelencia de DINOBREW al siguiente nivel.
+    </p>
+  </div>
+</div>
             
-            <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-              <li class="flex gap-2">
-                <i class="fa-solid fa-check text-gold-400 mt-1"></i>
-                <span>Interfaz intuitiva para creación de modelos sin código.</span>
-              </li>
-              <li class="flex gap-2">
-                <i class="fa-solid fa-check text-gold-400 mt-1"></i>
-                <span>Algoritmos optimizados para diferentes tipos de datos y problemas.</span>
-              </li>
-              <li class="flex gap-2">
-                <i class="fa-solid fa-check text-gold-400 mt-1"></i>
-                <span>Visualización avanzada de resultados y métricas de rendimiento.</span>
-              </li>
-            </ul>
+<!-- Sección de Predicción de Fecha de Vencimiento -->
+<section class="py-20 md:py-28 bg-white dark:bg-ink-900">
+  <div class="container mx-auto px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <span class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4
+                      bg-brand-100 text-brand-700 dark:bg-ink-800 dark:text-gold-300 border border-brand-200/70 dark:border-ink-700">
+          MODELO PREDICTIVO
+        </span>
+        <h2 class="text-4xl md:text-5xl font-extrabold text-brand-700 dark:text-gold-400 mb-6">Predicción de Fecha de Vencimiento</h2>
+        <p class="text-lg text-brand-800 dark:text-slate-300 max-w-2xl mx-auto">
+          Ingresa los datos del proceso productivo para predecir la fecha de vencimiento de tu cerveza DINOBREW
+        </p>
+      </div>
+
+      <div class="glass rounded-3xl p-8 border border-white/10 shadow-soft">
+        <form id="predictionForm" class="space-y-6">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label for="productionDate" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Fecha de Inicio del Proceso
+              </label>
+              <input type="date" id="productionDate" name="productionDate" required
+                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            </div>
+
+            <div>
+              <label for="beerType" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Tipo de Cerveza
+              </label>
+              <select id="beerType" name="beerType" required
+                      class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                <option value="">Selecciona un sabor</option>
+                <option value="fresa">Fresa</option>
+                <option value="mora">Mora</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="fermentationDays" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Tiempo de Fermentación (días)
+              </label>
+              <input type="number" id="fermentationDays" name="fermentationDays" min="1" max="30" required
+                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            </div>
+
+            <div>
+              <label for="storageDays" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Tiempo de Almacenamiento (días)
+              </label>
+              <input type="number" id="storageDays" name="storageDays" min="1" max="90" required
+                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            </div>
+
+            <div>
+              <label for="temperature" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Temperatura de Almacenamiento (°C)
+              </label>
+              <input type="number" id="temperature" name="temperature" min="0" max="30" step="0.1" required
+                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+            </div>
+
+            <div>
+              <label for="packaging" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
+                Tipo de Envase
+              </label>
+              <select id="packaging" name="packaging" required
+                      class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+                <option value="">Selecciona un envase</option>
+                <option value="botella_vidrio">Botella de Vidrio</option>
+                <option value="lata">Lata de Aluminio</option>
+                <option value="barril">Barril</option>
+              </select>
+            </div>
           </div>
 
-          <div class="bg-gold-50 dark:bg-ink-800 rounded-2xl p-8 shadow-soft border-l-4 border-gold-600 transform hover:scale-[1.02] transition-transform duration-300">
-            <p class="text-brand-900/80 dark:text-gold-100 leading-relaxed text-lg">
-              Nuestra plataforma integra las técnicas más avanzadas de <span class="text-brand-700 dark:text-gold-300 font-medium">aprendizaje automático</span>
-              con una experiencia de usuario excepcional, permitiendo a profesionales de cualquier área aprovechar el poder de la
-              <span class="text-brand-600 dark:text-gold-400 font-medium">inteligencia artificial</span> en sus proyectos.
-            </p>
+          <div class="text-center pt-4">
+            <button type="submit" 
+                    class="px-6 py-3 bg-gradient-to-r from-brand-600 to-gold-600 text-white font-medium rounded-lg shadow-md hover:from-brand-700 hover:to-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transform hover:scale-105 transition-all duration-300">
+              Predecir Fecha de Vencimiento
+            </button>
           </div>
+        </form>
 
-          <div class="rounded-2xl p-8 shadow-soft bg-gradient-to-r from-brand-100 to-gold-100 dark:from-ink-800 dark:to-ink-700 transform hover:scale-[1.02] transition-transform duration-300">
-            <p class="italic text-xl font-medium text-center text-brand-900/90 dark:text-gold-100">
-              Hoy, <span class="font-bold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es más que una plataforma:
-              es una <span class="text-brand-700 dark:text-gold-300">revolución en el análisis de datos</span>,
-              comprometida con hacer accesible la inteligencia artificial a todos.
-            </p>
+        <!-- Resultado de la predicción -->
+        <div id="predictionResult" class="mt-8 p-6 rounded-xl bg-gradient-to-r from-brand-50 to-gold-50 dark:from-ink-800 dark:to-ink-700 border border-brand-200 dark:border-ink-600 hidden">
+          <h3 class="text-xl font-bold text-brand-800 dark:text-gold-300 mb-2">Resultado de la Predicción</h3>
+          <div class="flex items-center justify-center">
+            <div class="text-center">
+              <p class="text-lg text-brand-700 dark:text-slate-300 mb-1">Fecha de vencimiento estimada:</p>
+              <p id="expirationDate" class="text-3xl font-bold text-brand-900 dark:text-gold-200"></p>
+            </div>
+          </div>
+          <div class="mt-4 text-sm text-brand-600 dark:text-slate-400">
+            <p>Esta predicción se basa en el modelo de Machine Learning de DinoAnalyticsML entrenado con datos históricos de producción.</p>
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Características y Beneficios -->
-  <section class="py-10 md:py-14">
-    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-6">
-      <!-- Características -->
-      <article class="glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.02] transition-transform duration-300">
-        <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-          <i class="fa-solid fa-cogs text-gold-400"></i>
-          Características principales
-        </h2>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          DinoAnalyticsML ofrece un conjunto completo de herramientas para el ciclo completo del Machine Learning,
-          desde la preparación de datos hasta el despliegue de modelos en producción.
+      <!-- Explicación del modelo -->
+      <div class="mt-12 bg-brand-50 dark:bg-ink-800 rounded-2xl p-6 shadow-soft">
+        <h3 class="text-xl font-bold text-brand-800 dark:text-gold-300 mb-3">¿Cómo funciona nuestro modelo predictivo?</h3>
+        <p class="text-brand-700 dark:text-slate-300 mb-4">
+          Nuestro modelo de Machine Learning ha sido entrenado con datos históricos de todo el proceso productivo de DINOBREW. 
+          Analiza variables para predecir la fecha de vencimiento de cada lote de cerveza.
         </p>
-
-        <div class="mt-5 space-y-3 text-sm">
+        
+        <div class="space-y-3">
           <div class="flex items-start gap-3">
             <div class="bg-brand-100 dark:bg-ink-700 rounded-full p-2 flex-shrink-0">
-              <i class="ti ti-database text-brand-700 dark:text-gold-400"></i>
+              <i class="ti ti-chart-dots text-brand-700 dark:text-gold-400"></i>
             </div>
             <div>
-              <h3 class="font-semibold text-brand-900 dark:text-gold-200">Preparación de datos</h3>
-              <p class="text-brand-800/70 dark:text-gold-200/80">Limpieza, transformación y enriquecimiento automático.</p>
+              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Variables de entrada</h4>
+              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
+                El modelo considera fechas clave del proceso, tipo de cerveza, tiempos de fermentación y almacenamiento, temperatura y tipo de envase.
+              </p>
             </div>
           </div>
           
@@ -151,18 +231,10 @@
               <i class="ti ti-brain text-brand-700 dark:text-gold-400"></i>
             </div>
             <div>
-              <h3 class="font-semibold text-brand-900 dark:text-gold-200">Modelado automático</h3>
-              <p class="text-brand-800/70 dark:text-gold-200/80">Selección y optimización de algoritmos sin intervención manual.</p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-3">
-            <div class="bg-brand-100 dark:bg-ink-700 rounded-full p-2 flex-shrink-0">
-              <i class="ti ti-chart-line text-brand-700 dark:text-gold-400"></i>
-            </div>
-            <div>
-              <h3 class="font-semibold text-brand-900 dark:text-gold-200">Evaluación y métricas</h3>
-              <p class="text-brand-800/70 dark:text-gold-200/80">Análisis detallado del rendimiento con visualizaciones intuitivas.</p>
+              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Algoritmo de predicción</h4>
+              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
+                Utilizamos un algoritmo de regresión que identifica las variables de entrada y la durabilidad del producto.
+              </p>
             </div>
           </div>
           
@@ -171,264 +243,83 @@
               <i class="ti ti-rocket text-brand-700 dark:text-gold-400"></i>
             </div>
             <div>
-              <h3 class="font-semibold text-brand-900 dark:text-gold-200">Despliegue simplificado</h3>
-              <p class="text-brand-800/70 dark:text-gold-200/80">Integración con sistemas existentes con un solo clic.</p>
+              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Beneficios</h4>
+              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
+                Reduce desperdicios, optimiza inventarios y garantiza que los consumidores reciban siempre un producto fresco y en óptimas condiciones.
+              </p>
             </div>
           </div>
         </div>
-      </article>
-
-      <!-- Beneficios -->
-      <article class="glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.02] transition-transform duration-300">
-        <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-          <i class="fa-solid fa-star text-gold-400"></i>
-          Beneficios para tu negocio
-        </h2>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          Con DinoAnalyticsML, tu organización puede aprovechar el poder del Machine Learning sin necesidad de equipos especializados,
-          reduciendo costos y acelerando la transformación digital.
-        </p>
-
-        <div class="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Reducción de costos</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
-              Elimina la necesidad de contratar equipos de data science especializados.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Ahorro de tiempo</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
-              Procesos que antes llevaban meses ahora se completan en días u horas.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Precisión mejorada</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
-              Modelos optimizados que superan consistentemente los métodos tradicionales.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Competitividad</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1 text-sm">
-              Anticipa tendencias y toma decisiones basadas en datos predictivos.
-            </p>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <!-- Tipos de Modelos -->
-  <section class="py-10 md:py-14">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.01] transition-transform duration-300">
-        <div class="flex items-center justify-between flex-wrap gap-4">
-          <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-            <i class="fa-solid fa-sitemap text-gold-400"></i>
-            Tipos de Modelos Disponibles
-          </h2>
-          <span class="text-brand-700/80 dark:text-gold-300/90 text-sm">
-            Clasificación · Regresión · Clustering · Procesamiento de Lenguaje Natural
-          </span>
-        </div>
-
-        <div class="mt-6 grid md:grid-cols-4 gap-6 text-sm">
-          <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Clasificación</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Predice categorías discretas para segmentar clientes, detectar fraudes o diagnosticar condiciones.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Regresión</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Pronostica valores numéricos continuos como ventas, precios o demanda futura.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Clustering</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Agrupa datos similares sin etiquetas previas para descubrir patrones ocultos.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-5 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Procesamiento de Lenguaje Natural</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Analiza y comprende texto para extracción de entidades, análisis de sentimientos y más.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
-  </section>
-
-  <!-- Casos de Uso -->
-  <section class="py-10 md:py-14">
-    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-6">
-      <!-- Casos de uso principales -->
-      <div class="lg:col-span-2 glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.01] transition-transform duration-300">
-        <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-          <i class="fa-solid fa-lightbulb text-gold-400"></i>
-          Casos de Uso
-        </h2>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          DinoAnalyticsML se adapta a múltiples industrias y escenarios, permitiendo a organizaciones de cualquier tamaño
-          aprovechar la inteligencia artificial para resolver problemas complejos.
-        </p>
-
-        <div class="mt-5 grid sm:grid-cols-2 gap-4 text-sm">
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Retail y E-commerce</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Sistemas de recomendación, predicción de demanda y detección de fraude.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Salud</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Diagnóstico asistido, predicción de riesgos y análisis de imágenes médicas.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Finanzas</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Evaluación de crédito, detección de anomalías y análisis de mercado.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="font-semibold text-brand-900 dark:text-white">Manufactura</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Mantenimiento predictivo, control de calidad y optimización de procesos.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Integración -->
-      <aside class="glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.02] transition-transform duration-300">
-        <h3 class="text-xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-          <i class="fa-solid fa-plug text-gold-400"></i>
-          Integración Sencilla
-        </h3>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          DinoAnalyticsML se integra fácilmente con tus sistemas existentes a través de APIs REST,
-          conectores nativos y bibliotecas para los lenguajes de programación más populares.
-        </p>
-
-        <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          <li class="flex gap-2">
-            <i class="fa-solid fa-code text-gold-400 mt-1"></i>
-            <span>API REST completa</span>
-          </li>
-          <li class="flex gap-2">
-            <i class="fa-solid fa-database text-gold-400 mt-1"></i>
-            <span>Conectores para bases de datos</span>
-          </li>
-          <li class="flex gap-2">
-            <i class="fa-solid fa-cloud text-gold-400 mt-1"></i>
-            <span>Implementación en nube o local</span>
-          </li>
-          <li class="flex gap-2">
-            <i class="fa-solid fa-shield-halved text-gold-400 mt-1"></i>
-            <span>Seguridad y cumplimiento normativo</span>
-          </li>
-        </ul>
-      </aside>
-    </div>
-  </section>
-
-  <!-- Proceso de Implementación -->
-  <section class="py-10 md:py-14">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="glass rounded-3xl p-6 border border-white/10 shadow-soft transform hover:scale-[1.01] transition-transform duration-300">
-        <h2 class="text-2xl font-bold flex items-center gap-2 text-brand-900 dark:text-white">
-          <i class="fa-solid fa-list-check text-gold-400"></i>
-          Proceso de Implementación
-        </h2>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-          Nuestro proceso simplificado te permite tener modelos predictivos funcionales en pocas horas:
-        </p>
-
-        <div class="mt-5 grid md:grid-cols-4 gap-4 text-sm">
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="text-brand-900 dark:text-white font-semibold">Paso 1 · Conectar datos</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Importa tus datos desde archivos, bases de datos o APIs.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="text-brand-900 dark:text-white font-semibold">Paso 2 · Definir objetivo</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Selecciona qué quieres predecir y el tipo de problema.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="text-brand-900 dark:text-white font-semibold">Paso 3 · Entrenar modelo</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Nuestra plataforma optimiza automáticamente los algoritmos.
-            </p>
-          </div>
-
-          <div class="rounded-2xl p-4 border border-brand-700/20 bg-white/80 dark:border-gold-400/20 dark:bg-black/40 transform hover:scale-105 transition-transform duration-300">
-            <h3 class="text-brand-900 dark:text-white font-semibold">Paso 4 · Implementar</h3>
-            <p class="text-brand-800 dark:text-slate-300 mt-1">
-              Despliega tu modelo con un solo clic y empieza a usarlo.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="py-12">
-    <div class="max-w-4xl mx-auto px-6 text-center">
-      <div class="glass rounded-3xl p-8 border border-gold-400/20 shadow-soft transform hover:scale-[1.02] transition-transform duration-300">
-        <h2 class="text-2xl md:text-3xl font-extrabold text-brand-900 dark:text-white">
-          ¿Listo para transformar tus datos en inteligencia?
-        </h2>
-
-        <p class="mt-3 text-brand-800 dark:text-slate-300 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
-          Únete a la revolución del Machine Learning con DinoAnalyticsML y descubre el poder de la inteligencia artificial
-          al alcance de tu organización.
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-          <a href="{{ url_for('registro') }}"
-             class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border border-brand-700/30 bg-white/80 text-brand-900 hover:bg-white dark:border-gold-400/20 dark:bg-black/50 dark:text-gold-200 dark:hover:bg-black/70 transition text-sm font-medium shadow-gold transform hover:scale-105">
-            <i class="fa-solid fa-rocket"></i>
-            <span>Comenzar Gratis</span>
-          </a>
-          
-          <a href="{{ url_for('demo') }}"
-             class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border border-gold-400/30 bg-gold-100/80 text-brand-900 hover:bg-gold-100 dark:bg-gold-900/30 dark:text-gold-200 dark:hover:bg-gold-900/50 transition text-sm font-medium shadow-gold transform hover:scale-105">
-            <i class="fa-solid fa-play"></i>
-            <span>Ver Demo</span>
-          </a>
-        </div>
-      </div>
-
-      <div class="text-[11px] text-brand-700/70 dark:text-gold-300/70 mt-6">
-        DinoAnalyticsML · Plataforma de Machine Learning · Universidad de Cundinamarca &amp; Universidad de Loja
-      </div>
-    </div>
-  </section>
-
+  </div>
 </section>
+
+<script>
+  document.getElementById('predictionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Obtener valores del formulario
+    const productionDate = new Date(document.getElementById('productionDate').value);
+    const beerType = document.getElementById('beerType').value;
+    const fermentationDays = parseInt(document.getElementById('fermentationDays').value);
+    const storageDays = parseInt(document.getElementById('storageDays').value);
+    const temperature = parseFloat(document.getElementById('temperature').value);
+    const packaging = document.getElementById('packaging').value;
+    
+    // Simular predicción - esto sería reemplazado por una llamada real al modelo
+    // Base: 90 días desde producción
+    let daysToAdd = 90;
+    
+    // Ajustar según tipo de cerveza
+    switch(beerType) {
+      case 'fresa':
+        daysToAdd += 5; // La fresa podría durar un poco más
+        break;
+      case 'mora':
+        daysToAdd += 3;
+        break;
+      case 'frutos_rojos':
+        daysToAdd += 7;
+        break;
+      case 'maracuya':
+        daysToAdd += 2;
+        break;
+    }
+    
+    // Ajustar según tiempo de fermentación (más fermentación, más durabilidad)
+    daysToAdd += fermentationDays * 0.5;
+    
+    // Ajustar según temperatura (menor temperatura, mayor durabilidad)
+    daysToAdd += (15 - temperature) * 1.2;
+    
+    // Ajustar según tipo de envase
+    switch(packaging) {
+      case 'botella_vidrio':
+        daysToAdd += 5; // El vidrio protege mejor
+        break;
+      case 'lata':
+        daysToAdd += 3;
+        break;
+      case 'barril':
+        daysToAdd += 1; // Una vez abierto, dura menos
+        break;
+    }
+    
+    // Calcular fecha de vencimiento
+    const expirationDate = new Date(productionDate);
+    expirationDate.setDate(expirationDate.getDate() + Math.round(daysToAdd));
+    
+    // Formatear fecha
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = expirationDate.toLocaleDateString('es-ES', options);
+    
+    // Mostrar resultado
+    document.getElementById('expirationDate').textContent = formattedDate;
+    document.getElementById('predictionResult').classList.remove('hidden');
+    
+    // Scroll al resultado
+    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
+  });
+</script>
 {% endblock %}
