@@ -35,7 +35,6 @@
         Fresa &amp; Mora · Sabor Auténtico
       </p>
 
-
       <!-- Botón CTA en el hero con efecto mejorado -->
       <div class="mt-8 animate-bounce">
         <a href="#descripcion"
@@ -45,8 +44,6 @@
       </div>
     </div>
 
-    
-    
     <!-- Franja decorativa inferior (ámbar/dorado) con animación -->
     <div class="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-brand-600 via-brand-500 to-gold-600 animate-pulse"></div>
     
@@ -59,51 +56,52 @@
     </div>
   </div>
 
-  <!-- Descripción general -->
+  <!-- Gallery Section (MODIFICADA: imágenes más pequeñas y completas) -->
+  <section class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-ink-900 dark:to-ink-800 py-20 md:py-28">
+    <div class="container mx-auto px-6">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-brand-800 dark:text-gold-400 mb-6">Sabores & Proceso</h2>
+      </div>
 
-  <!-- Gallery Section -->
-<section class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-ink-900 dark:to-ink-800 py-20 md:py-28">
-  <div class="container mx-auto px-6">
-    <div class="text-center max-w-3xl mx-auto mb-16">
-      <h2 class="text-4xl md:text-5xl font-extrabold text-brand-800 dark:text-gold-400 mb-6">Sabores & Proceso</h2>
-    </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-500">
+          <div class="relative h-52 md:h-64 flex items-center justify-center bg-black dark:bg-ink-900 p-2">
+            <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" alt="Cerveza artesanal"
+                 class="max-h-full max-w-full object-contain">
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+              <p class="text-white font-medium">Cerveza Artesanal</p>
+            </div>
+          </div>
+        </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-      <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}" alt="Cerveza artesanal" class="w-full h-full object-cover">
-          <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
-            <p class="text-white font-medium">Cerveza Artesanal</p>
+        <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
+          <div class="relative h-52 md:h-64 flex items-center justify-center bg-black dark:bg-ink-900 p-2">
+            <img src="{{ url_for('static', filename='img/2fresas.jpg') }}" alt="Fresas"
+                 class="max-h-full max-w-full object-contain">
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+              <p class="text-white font-medium">Fresas Frescas</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
+          <div class="relative h-52 md:h-64 flex items-center justify-center bg-black dark:bg-ink-900 p-2">
+            <img src="{{ url_for('static', filename='img/moras.jpg') }}" alt="Moras"
+                 class="max-h-full max-w-full object-contain">
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
+              <p class="text-white font-medium">Moras Selectas</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/fresas.jpg') }}" alt="Fresas" class="w-full h-full object-cover">
-          <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
-            <p class="text-white font-medium">Fresas Frescas</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-2xl overflow-hidden shadow-soft hover:shadow-gold transition-all duration-500 transform hover:-translate-y-2 group bg-white dark:bg-ink-800">
-        <div class="relative h-64 md:h-80">
-          <img src="{{ url_for('static', filename='img/moras.png') }}" alt="Moras" class="w-full h-full object-cover">
-          <div class="absolute inset-0 bg-gradient-to-t from-ink-900/70 to-transparent opacity-0 group-hover:opacity-100 transition flex items-end p-6">
-            <p class="text-white font-medium">Moras Selectas</p>
-          </div>
-        </div>
+      <div class="max-w-3xl mx-auto text-center glass p-8 rounded-2xl shadow-soft border border-white/30 dark:border-gold-700/30">
+        <p class="text-brand-900/80 dark:text-gold-100 text-lg">
+          Fermentación controlada durante 14 días y des-alcoholización natural, preservando el perfil sensorial y el aroma frutal.
+        </p>
       </div>
     </div>
-
-    <div class="max-w-3xl mx-auto text-center glass p-8 rounded-2xl shadow-soft border border-white/30 dark:border-gold-700/30">
-      <p class="text-brand-900/80 dark:text-gold-100 text-lg">
-        Fermentación controlada durante 14 días y des-alcoholización natural, preservando el perfil sensorial y el aroma frutal.
-      </p>
-    </div>
-  </div>
-</section>
+  </section>
 
   <div id="descripcion"
        class="max-w-5xl mx-auto glass p-10 rounded-3xl shadow-gold border border-white/40 dark:border-gold-700/30 transition-all duration-500">
@@ -129,8 +127,8 @@
 
         {% for item in [
           {'img': 'img/beer_hero.jpg', 'alt': 'Cerveza base', 'label': 'Cerveza base'},
-          {'img': 'img/fresas.jpg', 'alt': 'Fresas frescas', 'label': 'Fresas frescas'},
-          {'img': 'img/moras.png', 'alt': 'Moras silvestres', 'label': 'Moras silvestres'}
+          {'img': 'img/2fresas.jpg', 'alt': 'Fresas frescas', 'label': 'Fresas frescas'},
+          {'img': 'img/moras.jpg', 'alt': 'Moras silvestres', 'label': 'Moras silvestres'}
         ] %}
         <div class="rounded-2xl overflow-hidden group relative shadow-soft hover:shadow-gold transition-all duration-500 bg-white dark:bg-ink-800">
 
@@ -239,10 +237,8 @@
       </h2>
 
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {% for img in ['img/gallery1.jpg', 'img/gallery2.jpg', 'img/gallery3.jpg', 'img/gallery4.jpg', 'img/gallery5.jpg', 'img/gallery6.jpg'] %}
+        {% for img in ['img/ddd.jpg', 'img/logo.jpg', 'img/2fresas.jpg', 'img/moras.jpg', 'img/beer_hero.jpg'] %}
         <div class="relative overflow-hidden rounded-2xl shadow-soft hover:shadow-gold transition-all duration-500 group bg-white dark:bg-ink-800">
-
-          <!-- wrapper flex para NO recortar -->
           <div class="relative flex items-center justify-center bg-black dark:bg-ink-900 h-48 md:h-56">
             <img src="{{ url_for('static', filename=img) }}"
                  alt="Galería BerriBrew"
@@ -251,7 +247,6 @@
               <span class="text-white text-sm font-medium">DinoBrew 0.0%</span>
             </div>
           </div>
-
         </div>
         {% endfor %}
       </div>
@@ -277,8 +272,6 @@
     </div>
 
   </div>
-
-  
 
   <!-- Sección CTA final -->
   <div class="max-w-5xl mx-auto mt-10 mb-16">

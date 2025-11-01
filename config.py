@@ -1,18 +1,16 @@
 # config.py
-import os
-from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Carpeta base del proyecto (donde está app.py)
+BASE_DIR = Path(__file__).resolve().parent
 
-def _mysql_uri():
-    host = os.getenv("DB_HOST", "127.0.0.1")
-    port = os.getenv("DB_PORT", "3306")
-    name = os.getenv("DB_NAME", "ml_dashboard")
-    user = os.getenv("DB_USER", "root")
-    pwd  = os.getenv("DB_PASSWORD", "")
-    return f"mysql+pymysql://{user}:{pwd}@{host}:{port}/{name}?charset=utf8mb4"
+# Carpeta uploads y subcarpeta models (la que ya tienes)
+UPLOADS_DIR = BASE_DIR / "uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
 
-class Config:
-    SECRET_KEY = os.getenv("FLASK_SECRET", "dev-secret-change-me")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", _mysql_uri())
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+# Usaremos EXACTAMENTE esta carpeta: uploads/models
+MODELS_DIR = UPLOADS_DIR / "models"
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Ruta por defecto para el modelo de vencimiento
+EXPIRY_MODEL_PATH = MODELS_DIR / "expiry_model.joblib"

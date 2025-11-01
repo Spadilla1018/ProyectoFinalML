@@ -7,7 +7,6 @@ import logging
 from datetime import datetime, date
 from email.message import EmailMessage
 from functools import wraps
-from urllib.parse import quote_plus  # <-- sigue igual
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -56,9 +55,26 @@ from sklearn.metrics import (
 )
 import joblib
 
-# ---- .env (para que al ejecutar python app.py se carguen variables)
+# ---- .env
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 load_dotenv()
+
+from datetime import datetime, timedelta
+import os, joblib
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.ensemble import RandomForestRegressor
+from flask import request, jsonify, send_file
+
+from config import MODELS_DIR, EXPIRY_MODEL_PATH
+from flask import send_from_directory
+
+
 
 # -------------------------------------------------------------------
 # Rutas base absolutas
@@ -85,21 +101,16 @@ DB_PASS = os.getenv("DB_PASS", "")
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "3306")
 
-from urllib.parse import quote_plus
 DB_PASS_Q = quote_plus(DB_PASS)
 
-# >>> NUEVO: si no hay password, no lo incluimos en la URI
-if DB_PASS:
-    auth = f"{DB_USER}:{DB_PASS_Q}@"
-else:
-    auth = f"{DB_USER}@"
+# si no hay password, no lo incluimos en la URI
+auth = f"{DB_USER}:{DB_PASS_Q}@" if DB_PASS else f"{DB_USER}@"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{auth}{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# Conexión más robusta (evita 'MySQL server has gone away')
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
     "pool_recycle": 280,
@@ -130,7 +141,7 @@ try:
     masked = uri
     if "://" in uri and "@" in uri:
         scheme, rest = uri.split("://", 1)
-        creds, hostpart = rest.split("@", 1)
+        _, hostpart = rest.split("@", 1)
         masked = f"{scheme}://***:***@{hostpart}"
     app.logger.info(f"DB URI en uso: {masked}")
 except Exception:
@@ -141,7 +152,7 @@ except Exception:
 # -------------------------------------------------------------------
 db = SQLAlchemy(app)
 
-# --- Ruta de salud de la BD (prueba rápida) ------------------------
+# --- Ruta de salud de la BD ------------------------
 @app.get("/dbcheck")
 def dbcheck():
     try:
@@ -151,7 +162,7 @@ def dbcheck():
         return f"OK: {current_db} @ MySQL {version}"
     except Exception as e:
         return f"ERROR DB: {e}", 500
-# -------------------------------------------------------------------
+# --------------------------------------------------
 
 # ----------------------------------
 # Login
@@ -293,7 +304,7 @@ class MLRun(db.Model):
 
 
 # ----------------------------------
-# NUEVO: Mensajes de contacto
+# Mensajes de contacto
 # ----------------------------------
 class ContactMessage(db.Model):
     __tablename__ = "contact_messages"
@@ -369,7 +380,6 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
         if algorithm == "logreg":
             model = LogisticRegression(max_iter=300)
         elif algorithm == "rf":
-            # FIX: corrección de parámetro
             model = RandomForestClassifier(n_estimators=300, random_state=42)
         elif algorithm == "knn":
             model = KNeighborsClassifier(n_neighbors=5)
@@ -384,6 +394,28 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
 # ----------------------------------
 CURRENT_DF = None
 CURRENT_FILENAME = None
+
+
+def _try_sync_df_from_session():
+    """Carga el df desde el path guardado en sesión si CURRENT_DF es None."""
+    global CURRENT_DF, CURRENT_FILENAME
+    if CURRENT_DF is None:
+        path = session.get('dataset_path')
+        if path and os.path.exists(path):
+            try:
+                # Intento con ; y coma
+                df = pd.read_csv(path, sep=";")
+                if df.shape[1] == 1:
+                    df = pd.read_csv(path)
+                CURRENT_DF = df
+                CURRENT_FILENAME = os.path.basename(path)
+            except Exception:
+                try:
+                    CURRENT_DF = pd.read_csv(path)
+                    CURRENT_FILENAME = os.path.basename(path)
+                except Exception:
+                    CURRENT_DF = None
+                    CURRENT_FILENAME = None
 
 
 # ----------------------------------
@@ -421,7 +453,6 @@ with app.app_context():
         db.session.add(Flavor(name="Fresa & Mora"))
         db.session.commit()
 
-    # ml_runs schema_json
     ml_cols = [c['name'] for c in insp.get_columns('ml_runs')]
     if 'schema_json' not in ml_cols:
         db.session.execute(
@@ -562,11 +593,10 @@ def admin_users_create():
 
 
 # ----------------------------------
-# Rutas principales + EDA
+# Rutas principales
 # ----------------------------------
 @app.get("/")
 def index():
-    # Renderiza inicio.html; si no existe, deja log y muestra fallback sin 500.
     try:
         return render_template("inicio.html", title="Inicio", filename=CURRENT_FILENAME)
     except TemplateNotFound as e:
@@ -594,7 +624,6 @@ def index():
                 <p>Abre <code>/_debug/templates</code> para ver qué archivos llegaron.</p>
                 <ul>
                   <li>Verifica que el archivo esté <strong>commiteado</strong> y <strong>pusheado</strong>.</li>
-                  <li>Confirma que la carpeta es <code>templates/</code> y el nombre exacto es <code>inicio.html</code>.</li>
                 </ul>
               </body>
             </html>
@@ -603,6 +632,7 @@ def index():
         )
 
 
+# ---------- Carga de dataset ----------
 @app.post("/upload")
 @login_required
 def upload():
@@ -611,11 +641,11 @@ def upload():
     f = request.files.get("file")
     if not f or f.filename == "":
         flash("Selecciona un archivo .csv", "warning")
-        return redirect(url_for("index"))
+        return redirect(url_for("analytics"))
 
     if not allowed_file(f.filename):
         flash("Formato no permitido (usa .csv).", "danger")
-        return redirect(url_for("index"))
+        return redirect(url_for("analytics"))
 
     path = os.path.join(app.config["UPLOAD_FOLDER"], f.filename)
     f.save(path)
@@ -634,25 +664,32 @@ def upload():
         session['dataset_path'] = path
 
         flash(f"Archivo {f.filename} cargado correctamente.", "success")
-        return redirect(url_for("entendimiento"))
+        return redirect(url_for("analytics"))
 
     except Exception as e:
         flash(f"Error leyendo CSV: {e}", "danger")
-        return redirect(url_for("index"))
+        return redirect(url_for("analytics"))
 
 
-@app.get("/analytics")  # Cambiamos el nombre de la ruta a /analytics
+# ---------- Página de Analytics (reemplaza 'entendimiento') ----------
+@app.get("/analytics")
 @login_required
-def analytics():  # Cambiamos el nombre de la función
-    # Ya no necesitamos verificar CURRENT_DF
+def analytics():
+    _try_sync_df_from_session()
+    cols = CURRENT_DF.columns.tolist() if CURRENT_DF is not None else []
     return render_template(
-        "analytics.html",  # Usamos la plantilla analytics.html
-        title="DinoAnalyticsML"
+        "analytics.html",
+        title="DinoAnalyticsML",
+        columns=cols,
+        filename=CURRENT_FILENAME
     )
 
+
+# ---------- APIs de análisis exploratorio ----------
 @app.get("/api/column-data")
 @login_required
 def api_column_data():
+    _try_sync_df_from_session()
     if CURRENT_DF is None:
         return jsonify({"error": "No hay dataset cargado."}), 400
 
@@ -687,9 +724,10 @@ def api_column_data():
 @app.get("/plot/corr")
 @login_required
 def plot_corr():
+    _try_sync_df_from_session()
     if CURRENT_DF is None:
         flash("No hay dataset cargado actualmente.", "warning")
-        return redirect(url_for("index"))
+        return redirect(url_for("analytics"))
 
     num_df = CURRENT_DF.select_dtypes(include=[np.number])
 
@@ -719,25 +757,22 @@ def plot_corr():
     return send_file(buf, mimetype="image/png")
 
 
-# ----------------------------------
-# Endpoint para obtener insights dinámicos
-# ----------------------------------
+# ---------- Insights rápidos (opcional) ----------
 @app.route('/api/insights')
 @login_required
 def get_insights():
     try:
-        if 'dataset_path' not in session:
+        _try_sync_df_from_session()
+        if CURRENT_DF is None and 'dataset_path' not in session:
             return jsonify({"error": "No hay dataset cargado"}), 400
 
-        dataset_path = session['dataset_path']
-        if not os.path.exists(dataset_path):
-            return jsonify({"error": "El dataset no existe"}), 400
+        if CURRENT_DF is None:
+            return jsonify({"error": "No se pudo cargar el dataset"}), 400
 
-        df = pd.read_csv(dataset_path)
-
+        df = CURRENT_DF
         insights = {}
 
-        # 1. Perfil de cliente
+        # 1. Perfil de cliente (heurístico, si existen columnas típicas)
         if 'edad' in df.columns:
             edad_promedio = df['edad'].mean()
             edad_min = df['edad'].min()
@@ -796,7 +831,7 @@ def get_insights():
                 {"name": "moras", "percentage": 35.0}
             ]
 
-        # 3. Precios óptimos
+        # 3. Precios óptimos (promedio pagado por sabor si existen columnas)
         if 'sabor_preferido' in df.columns and 'precio_pagado' in df.columns:
             precios_optimos = []
             for sabor in df['sabor_preferido'].unique():
@@ -819,13 +854,13 @@ def get_insights():
 # ----------------------------------
 # Lotes / Lecturas / Des-alcoholización
 # ----------------------------------
-def plato_from_sg(sg: float | None):
+def plato_from_sg(sg):
     if not sg:
         return None
     return (-616.868) + 1111.14*sg - 630.272*(sg**2) + 135.997*(sg**3)
 
 
-def abv_estimate(og: float | None, fg: float | None):
+def abv_estimate(og, fg):
     if not og or not fg:
         return None
     return max(0.0, (og - fg) * 131.25)
@@ -1041,6 +1076,7 @@ def readings_upload(batch_id):
 def api_ml_train():
     global CURRENT_DF, CURRENT_FILENAME
 
+    _try_sync_df_from_session()
     if CURRENT_DF is None:
         return jsonify({"error": "No hay dataset cargado."}), 400
 
@@ -1210,7 +1246,7 @@ def download_model(run_id):
 
     if not os.path.exists(r.model_path):
         flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
+        return redirect(url_for("analytics"))
 
     fname = f"modelo_{r.task}_{r.algorithm}_run{r.id}.joblib"
     return send_file(
@@ -1230,7 +1266,7 @@ def predict_form(run_id):
 
     if not os.path.exists(r.model_path):
         flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
+        return redirect(url_for("analytics"))
 
     features = json.loads(r.features_json)
     schema = json.loads(r.schema_json or "{}")
@@ -1251,7 +1287,7 @@ def predict_submit(run_id):
 
     if not os.path.exists(r.model_path):
         flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
+        return redirect(url_for("analytics"))
 
     features = json.loads(r.features_json)
     schema = json.loads(r.schema_json or "{}")
@@ -1651,13 +1687,10 @@ def nosotros():
     return render_template("nosotros.html", title="Nosotros")
 
 
-
-
 # ----------------------------------
-# NUEVO: enviar email
+# Enviar email de contacto
 # ----------------------------------
 def send_contact_email(cm: ContactMessage) -> bool:
-    """Devuelve True si se envió OK, False si falló."""
     enabled = os.getenv("MAIL_ENABLED", "1") == "1"
     if not enabled:
         return False
@@ -1703,7 +1736,7 @@ def send_contact_email(cm: ContactMessage) -> bool:
 
 
 # ----------------------------------
-# NUEVA RUTA PÚBLICA: Contáctenos
+# Contáctenos
 # ----------------------------------
 @app.route("/contactenos", methods=["GET", "POST"])
 def contactenos():
@@ -1741,8 +1774,6 @@ def contactenos():
     return render_template("contactenos.html", title="Contáctenos")
 
 
-
-
 # ----------------------------------
 # Admin de mensajes de contacto
 # ----------------------------------
@@ -1776,5 +1807,9 @@ def admin_contactos_export():
 # Run (local)
 # ----------------------------------
 if __name__ == "__main__":
-    # Ejecuta local. En servidores usa Gunicorn (app:app).
     app.run(debug=True, port=int(os.getenv("PORT", "5000")))
+
+# Descargar cualquier archivo dentro de uploads/models
+@app.route("/models/<path:filename>")
+def download_model(filename):
+    return send_from_directory(MODELS_DIR, filename, as_attachment=True)

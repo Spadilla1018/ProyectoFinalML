@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.ensemble import RandomForestRegressor
+from config import MODELS_DIR, EXPIRY_MODEL_PATH
 
 ml = Blueprint("ml", __name__, template_folder="templates")
 
