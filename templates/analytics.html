@@ -1,180 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="min-h-screen bg-gradient-to-br from-brand-50 via-brand-100 to-white dark:from-ink-900 dark:via-ink-800 dark:to-ink-900 py-10">
-
   <div class="max-w-6xl mx-auto px-4">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-extrabold text-brand-800 dark:text-gold-300">DinoAnalyticsML</h1>
-        <p class="text-brand-700/80 dark:text-slate-300 mt-1">
-          Carga un CSV y explora tus datos. Entrena un modelo de ML en minutos.
-        </p>
-      </div>
-
-      <!-- Upload dataset general (opcional para tus gráficos y modelo genérico) -->
-      <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="flex items-center gap-3">
-        <input type="file" name="file" accept=".csv"
-               class="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                      file:bg-brand-600 file:text-white hover:file:bg-brand-700
-                      dark:file:bg-gold-600 dark:hover:file:bg-gold-500">
-        <button class="px-4 py-2 rounded-lg bg-ink-900 text-white dark:bg-gold-600 dark:text-ink-900">
-          Subir CSV
-        </button>
-      </form>
-    </div>
-
-    <!-- Estado del dataset -->
     <div class="mb-8">
-      {% if filename %}
-        <div class="rounded-xl px-4 py-3 bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-100 dark:border-green-800">
-          Dataset cargado: <strong>{{ filename }}</strong>
-        </div>
-      {% else %}
-        <div class="rounded-xl px-4 py-3 bg-yellow-50 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-800">
-          No hay dataset cargado. Sube un archivo CSV para comenzar.
-        </div>
-      {% endif %}
+      <h1 class="text-3xl md:text-4xl font-extrabold text-brand-800 dark:text-gold-300">DinoAnalytics · Modelo de Vencimiento</h1>
+      <p class="text-brand-700/80 dark:text-slate-300 mt-1">
+        Entrena un modelo DEMO con datos sintéticos realistas y realiza predicciones manuales.
+      </p>
     </div>
 
-    <!-- Paneles -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Columna izquierda: Explorar -->
+      <!-- Columna izquierda: Predicción manual -->
       <div class="lg:col-span-2 glass rounded-2xl p-6 border border-white/10">
-        <h2 class="text-xl font-bold mb-4 text-brand-800 dark:text-gold-300">Explorar columna</h2>
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Predicción manual</h2>
 
-        <div class="grid md:grid-cols-3 gap-3 mb-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Columna</label>
-            <select id="selCol" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-              <option value="">-- seleccionar --</option>
-              {% for c in columns %}
-                <option value="{{ c }}">{{ c }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-1">Modo</label>
-            <select id="selMode" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-              <option value="hist">Histograma (numérica)</option>
-              <option value="counts">Conteos (categórica)</option>
-            </select>
-          </div>
-
-          <div id="binsWrap">
-            <label class="block text-sm font-medium mb-1">Bins</label>
-            <input id="inpBins" type="number" min="3" max="80" value="15"
-                   class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 mb-4">
-          <button id="btnPlot" class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">Graficar</button>
-          <span id="msgPlot" class="text-sm"></span>
-        </div>
-
-        <div class="h-64">
-          <canvas id="chart"></canvas>
-        </div>
-
-        <hr class="my-6 border-white/30">
-        <h3 class="text-lg font-semibold mb-2 text-brand-800 dark:text-gold-300">Matriz de correlación</h3>
-        <img id="corrImg" src="{{ url_for('plot_corr') }}?t={{ range(1,999999)|random }}" alt="Correlación" class="rounded-xl border border-white/10 max-w-full">
-      </div>
-
-      <!-- Columna derecha: Entrenar general + Vencimiento -->
-      <div class="glass rounded-2xl p-6 border border-white/10">
-        <h2 class="text-xl font-bold mb-4 text-brand-800 dark:text-gold-300">Entrenar modelo (general)</h2>
-
-        <div class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium mb-1">Objetivo (y)</label>
-            <select id="selTarget" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-              <option value="">-- seleccionar --</option>
-              {% for c in columns %}
-                <option value="{{ c }}">{{ c }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-1">Features (X)</label>
-            <select id="selFeatures" multiple size="8"
-                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-              {% for c in columns %}
-                <option value="{{ c }}">{{ c }}</option>
-              {% endfor %}
-            </select>
-            <p class="text-xs text-slate-500 mt-1">Ctrl/Cmd + clic para seleccionar varias columnas.</p>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium mb-1">Algoritmo</label>
-              <select id="selAlgo" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-                <option value="rf">Random Forest</option>
-                <option value="logreg">Logistic Regression</option>
-                <option value="linreg">Linear Regression</option>
-                <option value="knn">KNN</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1">Test size</label>
-              <input id="inpTest" type="number" min="0.05" max="0.5" step="0.05" value="0.2"
-                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-            </div>
-          </div>
-
-          <button id="btnTrain" class="mt-2 w-full px-4 py-2 rounded-lg bg-ink-900 text-white dark:bg-gold-600 dark:text-ink-900">
-            Entrenar
-          </button>
-
-          <div id="trainMsg" class="text-sm mt-2"></div>
-
-          <div id="trainOut" class="mt-4 hidden rounded-xl p-3 bg-white/70 dark:bg-ink-800/60 border border-white/20">
-            <h4 class="font-semibold mb-1">Métricas</h4>
-            <pre id="metrics" class="text-xs overflow-auto"></pre>
-            <div class="mt-2">
-              <a id="modelLink" class="text-sm text-brand-700 dark:text-gold-300 underline" href="#" target="_blank">Descargar modelo</a>
-            </div>
-          </div>
-        </div>
-
-        <hr class="my-6 border-white/20">
-        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Últimas corridas</h2>
-        <div id="runsBox" class="text-sm space-y-2">
-          <div class="text-slate-500">Cargando...</div>
-        </div>
-
-        <!-- ====================== ESPECIAL: MODELO VENCIMIENTO ====================== -->
-        <hr class="my-6 border-white/20">
-        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Modelo de Vencimiento (especializado)</h2>
-
-        <!-- Entrenamiento del modelo de vencimiento -->
-        <div class="mb-4">
-          <p class="text-xs text-slate-500 mb-2">
-            CSV requerido con columnas: <code>packaging_date</code>, <code>fermentation_days</code>, <code>storage_temp_c</code>, <code>pasteurized</code> (0/1),
-            <code>fruit_type</code> (fresa/mora/mixta), <code>bottle_type</code> (vidrio_330/vidrio_500/lata_355), <code>ph_final</code>,
-            <code>distribution_days</code>, <code>initial_gravity</code>, <code>final_gravity</code>, <code>shelf_life_days</code>.
-          </p>
-          <form id="expiryTrainForm" class="flex items-center gap-3">
-            <input id="expiryFile" type="file" accept=".csv"
-                   class="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0
-                          file:bg-brand-600 file:text-white hover:file:bg-brand-700
-                          dark:file:bg-gold-600 dark:hover:file:bg-gold-500">
-            <button class="px-3 py-2 rounded-lg bg-ink-900 text-white dark:bg-gold-600 dark:text-ink-900" type="submit">
-              Entrenar vencimiento
-            </button>
-          </form>
-          <div id="expiryTrainMsg" class="text-sm mt-2"></div>
-          <pre id="expiryMetrics" class="text-xs mt-2 hidden rounded-lg p-3 bg-white/60 dark:bg-ink-800/60 border border-white/10"></pre>
-        </div>
-
-        <!-- Predicción manual -->
         <div class="rounded-xl p-4 bg-white/70 dark:bg-ink-800/60 border border-white/20">
-          <h3 class="font-semibold mb-2">Predicción manual</h3>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-sm">Fecha de envasado</label>
               <input id="pk_date" type="date" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
@@ -194,17 +36,13 @@
             <div>
               <label class="block text-sm">Fruta</label>
               <select id="fruit" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-                <option>fresa</option>
-                <option>mora</option>
-                <option>mixta</option>
+                <option>fresa</option><option>mora</option><option>mixta</option>
               </select>
             </div>
             <div>
               <label class="block text-sm">Envase</label>
               <select id="bottle" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
-                <option>vidrio_330</option>
-                <option>vidrio_500</option>
-                <option>lata_355</option>
+                <option>vidrio_330</option><option>vidrio_500</option><option>lata_355</option>
               </select>
             </div>
             <div>
@@ -225,176 +63,178 @@
             </div>
           </div>
 
-          <button id="btnExpiryPredict" class="mt-3 w-full px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">
-            Predecir vencimiento
-          </button>
+          <div class="flex flex-wrap gap-3 mt-4">
+            <button id="btnFill" class="px-3 py-2 rounded-lg border border-white/20 hover:bg-white/60 dark:hover:bg-ink-700">
+              Usar ejemplo realista
+            </button>
+            <button id="btnExpiryPredict" class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">
+              Predecir vencimiento
+            </button>
+          </div>
+
           <div id="expiryResult" class="mt-3 text-sm"></div>
+        </div>
+
+        <hr class="my-6 border-white/20">
+        <h3 class="text-lg font-semibold mb-2 text-brand-800 dark:text-gold-300">Importancias de variables</h3>
+        <div class="h-64"><canvas id="fiChart"></canvas></div>
+      </div>
+
+      <!-- Columna derecha: Estado y Entrenamiento -->
+      <div class="glass rounded-2xl p-6 border border-white/10">
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Estado del modelo</h2>
+        <div id="statusBox" class="text-sm space-y-1">
+          <div class="text-slate-500">Verificando...</div>
+        </div>
+        <div class="mt-2 text-sm" id="downloadLine"></div>
+
+        <hr class="my-6 border-white/20">
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Entrenar/Reentrenar</h2>
+
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">n_samples</label>
+              <input id="tr_n_samples" type="number" min="300" max="10000" value="1200"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">n_estimators</label>
+              <input id="tr_n_estimators" type="number" min="50" max="2000" value="300"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">test_size</label>
+              <input id="tr_test_size" type="text" value="0.2"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800" placeholder="0.2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">random_state</label>
+              <input id="tr_random_state" type="number" value="42"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+          </div>
+
+          <button id="btnExpiryBootstrap"
+                  class="w-full px-4 py-2 rounded-lg bg-ink-900 text-white dark:bg-gold-600 dark:text-ink-900">
+            Entrenar ahora
+          </button>
+
+          <div id="expiryTrainMsg" class="text-sm mt-2"></div>
+          <pre id="expiryMetrics" class="text-xs mt-2 hidden rounded-lg p-3 bg-white/60 dark:bg-ink-800/60 border border-white/10"></pre>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Libs -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function(){
-  // ========= Exploración =========
-  const selMode = document.getElementById('selMode');
-  const binsWrap = document.getElementById('binsWrap');
-  const inpBins = document.getElementById('inpBins');
-  const selCol  = document.getElementById('selCol');
-  const btnPlot = document.getElementById('btnPlot');
-  const msgPlot = document.getElementById('msgPlot');
-  const ctx = document.getElementById('chart');
-  let chart;
+  const statusBox = document.getElementById('statusBox');
+  const downloadLine = document.getElementById('downloadLine');
+  const expiryTrainMsg = document.getElementById('expiryTrainMsg');
+  const expiryMetrics = document.getElementById('expiryMetrics');
+  const btnBootstrap = document.getElementById('btnExpiryBootstrap');
+  const btnPredict = document.getElementById('btnExpiryPredict');
+  const btnFill = document.getElementById('btnFill');
+  const ctxFI = document.getElementById('fiChart');
 
-  function toggleBins(){
-    binsWrap.style.display = (selMode.value === 'hist') ? '' : 'none';
-  }
-  selMode.addEventListener('change', toggleBins);
-  toggleBins();
+  let fiChart;
 
   function showMsg(el, txt, ok=false){
     el.textContent = txt;
     el.className = ok ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300';
   }
 
-  function renderChart(labels, values, isBar=true){
-    if(chart){ chart.destroy(); }
-    chart = new Chart(ctx, {
-      type: isBar ? 'bar' : 'line',
-      data: {
-        labels: labels,
-        datasets: [{ label: 'Frecuencia', data: values }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins:{ legend:{ display:false } },
-        scales:{ x:{ ticks:{ autoSkip: true, maxRotation: 45, minRotation: 0 } } }
+  function drawFI(items){
+    if(!ctxFI) return;
+    const labels = items.map(x=>x.name);
+    const values = items.map(x=>x.importance);
+    if(fiChart){ fiChart.destroy(); }
+    fiChart = new Chart(ctxFI, {
+      type:'bar',
+      data:{ labels, datasets:[{label:'Importancia', data:values}] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{ x:{ticks:{autoSkip:false, maxRotation:45,minRotation:0}} }
       }
     });
   }
 
-  btnPlot.addEventListener('click', async ()=>{
-    const col = selCol.value;
-    const mode = selMode.value;
-    const bins = parseInt(inpBins.value || '15', 10);
-    if(!col){ showMsg(msgPlot, 'Selecciona una columna.'); return; }
-
-    const url = new URL('{{ url_for("api_column_data") }}', window.location.origin);
-    url.searchParams.set('mode', mode);
-    url.searchParams.set('col', col);
-    if(mode === 'hist') url.searchParams.set('bins', String(bins));
-
-    showMsg(msgPlot, 'Consultando...');
+  async function loadStatus(){
     try{
-      const res = await fetch(url);
-      const data = await res.json();
-      if(!res.ok || data.error){ showMsg(msgPlot, data.error || 'Error consultando datos.'); return; }
-      renderChart(data.labels, data.values, true);
-      showMsg(msgPlot, 'Gráfico actualizado.', true);
+      const r = await fetch('{{ url_for("api_expiry_status") }}');
+      const data = await r.json();
+      if(!r.ok){ statusBox.innerHTML = '<div class="text-red-600">Error consultando estado.</div>'; return; }
+
+      const rows = [];
+      rows.push(`<div><strong>Modelo:</strong> ${data.exists ? 'Entrenado' : 'No entrenado'}</div>`);
+      if(data.exists && data.trained_at){
+        rows.push(`<div><strong>Entrenado en:</strong> ${data.trained_at}</div>`);
+      }
+      if(data.metrics){
+        const m = data.metrics;
+        rows.push(`<div><strong>MAE:</strong> ${m.MAE?.toFixed?.(2) ?? m.MAE}`);
+        rows.push(`<strong>RMSE:</strong> ${m.RMSE?.toFixed?.(2) ?? m.RMSE}`);
+        rows.push(`<strong>R²:</strong> ${(m.R2*100).toFixed(1)}%</div>`);
+      }
+      if(data.params){
+        rows.push(`<div class="text-xs text-slate-500">n_samples=${data.params.n_samples} · n_estimators=${data.params.n_estimators} · test_size=${data.params.test_size} · seed=${data.params.random_state}</div>`);
+      }
+      statusBox.innerHTML = rows.map(x=>`<div>${x}</div>`).join('');
+
+      if(data.download_url){
+        downloadLine.innerHTML = `<a class="underline text-brand-700 dark:text-gold-300" href="${data.download_url}">Descargar modelo</a>`;
+      } else {
+        downloadLine.innerHTML = '';
+      }
+
+      if(data.feature_importance && data.feature_importance.length){
+        drawFI(data.feature_importance);
+      } else {
+        drawFI([]);
+      }
     }catch(e){
-      console.error(e); showMsg(msgPlot, 'Fallo de red/servidor.');
+      console.error(e);
+      statusBox.innerHTML = '<div class="text-red-600">No se pudo obtener el estado.</div>';
     }
-  });
+  }
 
-  // ========= Entrenar general =========
-  const btnTrain = document.getElementById('btnTrain');
-  const selTarget = document.getElementById('selTarget');
-  const selFeatures = document.getElementById('selFeatures');
-  const selAlgo = document.getElementById('selAlgo');
-  const inpTest = document.getElementById('inpTest');
-  const trainMsg = document.getElementById('trainMsg');
-  const trainOut = document.getElementById('trainOut');
-  const metricsPre = document.getElementById('metrics');
-  const modelLink = document.getElementById('modelLink');
+  // Entrenar DEMO con hiperparámetros
+  btnBootstrap.addEventListener('click', async ()=>{
+    const n_samples = parseInt(document.getElementById('tr_n_samples').value || '1200',10);
+    const n_estimators = parseInt(document.getElementById('tr_n_estimators').value || '300',10);
+    const test_size = parseFloat((document.getElementById('tr_test_size').value || '0.2').replace(',','.'));
+    const random_state = parseInt(document.getElementById('tr_random_state').value || '42',10);
 
-  function tmsg(txt, ok=false){ showMsg(trainMsg, txt, ok); }
-
-  btnTrain.addEventListener('click', async ()=>{
-    const target = selTarget.value;
-    const features = Array.from(selFeatures.selectedOptions).map(o=>o.value).filter(v=>v!==target);
-    const algorithm = selAlgo.value;
-    const test_size = parseFloat(inpTest.value || '0.2');
-
-    if(!target){ tmsg('Selecciona la columna objetivo (y).'); return; }
-    if(!features.length){ tmsg('Selecciona al menos una feature.'); return; }
-
-    tmsg('Entrenando...');
+    showMsg(expiryTrainMsg, 'Entrenando modelo...');
     try{
-      const res = await fetch('{{ url_for("api_ml_train") }}', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ target, features, algorithm, test_size })
+      const res = await fetch('{{ url_for("api_expiry_bootstrap") }}', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ n_samples, n_estimators, test_size, random_state })
       });
       const data = await res.json();
-      if(!res.ok || data.error){ tmsg(data.error || 'Fallo entrenando el modelo.'); trainOut.classList.add('hidden'); return; }
-      metricsPre.textContent = JSON.stringify(data.metrics, null, 2);
-      modelLink.href = data.model_download;
-      trainOut.classList.remove('hidden');
-      tmsg('Modelo entrenado.', true);
-      loadRuns();
+      if(!res.ok || data.error){
+        showMsg(expiryTrainMsg, data.error || 'Error entrenando.');
+        expiryMetrics.classList.add('hidden');
+        return;
+      }
+      expiryMetrics.textContent = JSON.stringify(data.metrics, null, 2);
+      expiryMetrics.classList.remove('hidden');
+      showMsg(expiryTrainMsg, data.note || 'Modelo entrenado.', true);
+
+      if(data.feature_importance){ drawFI(data.feature_importance); }
+      loadStatus();
     }catch(e){
-      console.error(e); tmsg('Error de red/servidor.'); trainOut.classList.add('hidden');
+      console.error(e);
+      showMsg(expiryTrainMsg, 'Fallo de red/servidor.');
     }
   });
 
-  async function loadRuns(){
-    try{
-      const box = document.getElementById('runsBox');
-      box.innerHTML = '<div class="text-slate-500">Cargando...</div>';
-      const res = await fetch('{{ url_for("api_ml_runs") }}');
-      const data = await res.json();
-      if(!res.ok){ box.innerHTML = '<div class="text-red-600">Error consultando corridas.</div>'; return; }
-      if(!data.length){ box.innerHTML = '<div class="text-slate-500">Sin corridas recientes.</div>'; return; }
-      box.innerHTML = data.map(r => `
-        <div class="rounded-lg p-3 border border-white/10 bg-white/70 dark:bg-ink-800/50">
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="font-semibold">#${r.id} · ${r.algorithm} · ${r.task}</div>
-              <div class="text-xs text-slate-500">y=${r.target} · ${r.created_at} · ${r.filename || '-'}</div>
-            </div>
-            <div>
-              <a class="text-brand-700 dark:text-gold-300 underline" href="${r.download}">Modelo</a>
-              &nbsp;|&nbsp;
-              <a class="text-brand-700 dark:text-gold-300 underline" href="/predict/${r.id}">Predecir</a>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }catch(e){ console.error(e); }
-  }
-  loadRuns();
-
-  // ========= VENCIMIENTO: Entrenar especializado =========
-  const expiryTrainForm = document.getElementById('expiryTrainForm');
-  const expiryTrainMsg  = document.getElementById('expiryTrainMsg');
-  const expiryMetrics   = document.getElementById('expiryMetrics');
-
-  expiryTrainForm.addEventListener('submit', async (ev)=>{
-    ev.preventDefault();
-    const file = document.getElementById('expiryFile').files[0];
-    if(!file){ showMsg(expiryTrainMsg, 'Adjunta un CSV.'); return; }
-    showMsg(expiryTrainMsg, 'Entrenando modelo de vencimiento...');
-    try{
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('{{ url_for("api_expiry_train") }}', { method:'POST', body: fd });
-      const data = await res.json();
-      if(!res.ok || data.error){ showMsg(expiryTrainMsg, data.error || 'Error entrenando.'); expiryMetrics.classList.add('hidden'); return; }
-      expiryMetrics.textContent = JSON.stringify(data.metrics, null, 2);
-      expiryMetrics.classList.remove('hidden');
-      showMsg(expiryTrainMsg, 'Modelo de vencimiento entrenado.', true);
-    }catch(e){ console.error(e); showMsg(expiryTrainMsg, 'Fallo de red/servidor.'); }
-  });
-
-  // ========= VENCIMIENTO: Predicción manual =========
-  const btnExpiryPredict = document.getElementById('btnExpiryPredict');
-  const expiryResult     = document.getElementById('expiryResult');
-
-  btnExpiryPredict.addEventListener('click', async ()=>{
+  // Predicción manual
+  btnPredict.addEventListener('click', async ()=>{
     const payload = {
       packaging_date: (document.getElementById('pk_date').value || new Date().toISOString().slice(0,10)),
       fermentation_days: parseInt(document.getElementById('ferment').value || '14', 10),
@@ -408,8 +248,9 @@
       final_gravity: parseFloat(document.getElementById('fg').value || '1.010')
     };
 
-    expiryResult.textContent = 'Calculando...';
-    expiryResult.className = 'text-slate-600';
+    const box = document.getElementById('expiryResult');
+    box.textContent = 'Calculando...'; box.className = 'text-slate-600';
+
     try{
       const res = await fetch('{{ url_for("api_expiry_predict") }}', {
         method: 'POST',
@@ -418,23 +259,41 @@
       });
       const data = await res.json();
       if(!res.ok || data.error){
-        expiryResult.textContent = data.error || 'No se pudo predecir.';
-        expiryResult.className = 'text-red-700 dark:text-red-300';
+        box.textContent = data.error || 'No se pudo predecir.';
+        box.className = 'text-red-700 dark:text-red-300';
         return;
       }
-      expiryResult.innerHTML = `
+      box.innerHTML = `
         <div class="rounded-lg p-3 border border-white/10 bg-white/70 dark:bg-ink-800/60">
           <div><strong>Vida útil estimada:</strong> ${data.shelf_life_days} días</div>
           <div><strong>Fecha de vencimiento:</strong> ${data.expiry_date}</div>
-          <div class="text-xs text-slate-500 mt-1">${data.note}</div>
+          <div class="text-xs text-slate-500 mt-1">${data.note || ''}</div>
         </div>`;
-      expiryResult.className = 'text-green-700 dark:text-green-300';
+      box.className = 'text-green-700 dark:text-green-300';
     }catch(e){
       console.error(e);
-      expiryResult.textContent = 'Error de red/servidor.';
-      expiryResult.className = 'text-red-700 dark:text-red-300';
+      box.textContent = 'Error de red/servidor.';
+      box.className = 'text-red-700 dark:text-red-300';
     }
   });
+
+  // Rellenar ejemplo
+  btnFill.addEventListener('click', ()=>{
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('pk_date').value = today;
+    document.getElementById('ferment').value = 14;
+    document.getElementById('temp').value = 6.0;
+    document.getElementById('pasteur').checked = true;
+    document.getElementById('fruit').value = 'fresa';
+    document.getElementById('bottle').value = 'vidrio_500';
+    document.getElementById('ph').value = 4.1;
+    document.getElementById('dist').value = 2;
+    document.getElementById('og').value = 1.042;
+    document.getElementById('fg').value = 1.012;
+  });
+
+  // Carga inicial
+  loadStatus();
 })();
 </script>
 {% endblock %}

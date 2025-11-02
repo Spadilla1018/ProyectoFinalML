@@ -1,0 +1,31 @@
+{
+  "trained": true,
+  "trained_at": "2025-11-01 20:12:28",
+  "algorithm": "RandomForestRegressor",
+  "params": {
+    "n_estimators": 300,
+    "test_size": 0.2,
+    "random_state": 42,
+    "n_samples": 1200
+  },
+  "metrics": {
+    "mae": 5.489,
+    "rmse": 7.316,
+    "r2": 0.5252
+  },
+  "feature_names": [
+    "packaging_date_ordinal",
+    "fermentation_days",
+    "storage_temp_c",
+    "pasteurized",
+    "fruit_type",
+    "bottle_type",
+    "ph_final",
+    "distribution_days",
+    "initial_gravity",
+    "final_gravity"
+  ],
+  "target": "shelf_life_days",
+  "model_relpath": "uploads/models/expiry_model.joblib",
+  "model_size_bytes": 22791267
+}
