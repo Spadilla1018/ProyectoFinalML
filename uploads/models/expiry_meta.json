@@ -1,6 +1,6 @@
 {
   "trained": true,
-  "trained_at": "2025-11-01 20:12:28",
+  "trained_at": "2025-11-05 19:20:22",
   "algorithm": "RandomForestRegressor",
   "params": {
     "n_estimators": 300,
