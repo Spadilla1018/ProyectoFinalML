@@ -4,14 +4,13 @@ import csv
 import json
 import smtplib
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from email.message import EmailMessage
 from functools import wraps
-from urllib.parse import quote_plus  # <-- sigue igual
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, jsonify, send_file, abort, session
+    flash, jsonify, send_file, abort, session, send_from_directory
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -56,9 +55,12 @@ from sklearn.metrics import (
 )
 import joblib
 
-# ---- .env (para que al ejecutar python app.py se carguen variables)
+# ---- .env
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 load_dotenv()
+from sklearn.inspection import permutation_importance  # (disponible; no estrictamente necesario)
+
 
 # -------------------------------------------------------------------
 # Rutas base absolutas
@@ -69,6 +71,8 @@ UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 IMG_DIR = os.path.join(STATIC_DIR, "img")
 MODELS_DIR = os.path.join(UPLOAD_DIR, "models")
+EXPIRY_MODEL_PATH = os.path.join(MODELS_DIR, "expiry_model.joblib")
+EXPIRY_META_PATH  = os.path.join(MODELS_DIR, "expiry_meta.json")  # <<< NUEVO
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
@@ -85,25 +89,13 @@ DB_PASS = os.getenv("DB_PASS", "")
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "3306")
 
-from urllib.parse import quote_plus
 DB_PASS_Q = quote_plus(DB_PASS)
-
-# >>> NUEVO: si no hay password, no lo incluimos en la URI
-if DB_PASS:
-    auth = f"{DB_USER}:{DB_PASS_Q}@"
-else:
-    auth = f"{DB_USER}@"
-
+auth = f"{DB_USER}:{DB_PASS_Q}@" if DB_PASS else f"{DB_USER}@"
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{auth}{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 )
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# Conexión más robusta (evita 'MySQL server has gone away')
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,
-    "pool_recycle": 280,
-}
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 280}
 
 # Crear dirs necesarios
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -130,7 +122,7 @@ try:
     masked = uri
     if "://" in uri and "@" in uri:
         scheme, rest = uri.split("://", 1)
-        creds, hostpart = rest.split("@", 1)
+        _, hostpart = rest.split("@", 1)
         masked = f"{scheme}://***:***@{hostpart}"
     app.logger.info(f"DB URI en uso: {masked}")
 except Exception:
@@ -141,7 +133,7 @@ except Exception:
 # -------------------------------------------------------------------
 db = SQLAlchemy(app)
 
-# --- Ruta de salud de la BD (prueba rápida) ------------------------
+# --- Ruta de salud de la BD ------------------------
 @app.get("/dbcheck")
 def dbcheck():
     try:
@@ -151,7 +143,7 @@ def dbcheck():
         return f"OK: {current_db} @ MySQL {version}"
     except Exception as e:
         return f"ERROR DB: {e}", 500
-# -------------------------------------------------------------------
+# --------------------------------------------------
 
 # ----------------------------------
 # Login
@@ -293,7 +285,7 @@ class MLRun(db.Model):
 
 
 # ----------------------------------
-# NUEVO: Mensajes de contacto
+# Mensajes de contacto
 # ----------------------------------
 class ContactMessage(db.Model):
     __tablename__ = "contact_messages"
@@ -314,17 +306,11 @@ class ContactMessage(db.Model):
 # ----------------------------------
 # Helpers
 # ----------------------------------
-def allowed_file(filename: str) -> bool:
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"csv"}
-
-
 def split_columns(df: pd.DataFrame):
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     categorical_cols = [c for c in df.columns if c not in numeric_cols]
-
     default_numeric = numeric_cols[0] if numeric_cols else None
     default_categorical = categorical_cols[0] if categorical_cols else None
-
     return numeric_cols, categorical_cols, default_numeric, default_categorical
 
 
@@ -333,6 +319,14 @@ def infer_task_from_target(series: pd.Series) -> str:
         nunique = series.dropna().nunique()
         return "regression" if nunique > 10 else "classification"
     return "classification"
+
+
+def _safe_ohe():
+    """Compatibilidad con scikit-learn viejo/nuevo (sparse_output vs sparse)."""
+    try:
+        return OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+    except TypeError:
+        return OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 
 def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
@@ -346,7 +340,7 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
 
     categorical_processor = Pipeline(steps=[
         ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("ohe", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+        ("ohe", _safe_ohe())
     ])
 
     pre = ColumnTransformer(
@@ -369,7 +363,6 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
         if algorithm == "logreg":
             model = LogisticRegression(max_iter=300)
         elif algorithm == "rf":
-            # FIX: corrección de parámetro
             model = RandomForestClassifier(n_estimators=300, random_state=42)
         elif algorithm == "knn":
             model = KNeighborsClassifier(n_neighbors=5)
@@ -380,10 +373,40 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
 
 
 # ----------------------------------
-# Estado en memoria del dataset
+# Estado en memoria del dataset DEMO
 # ----------------------------------
 CURRENT_DF = None
 CURRENT_FILENAME = None
+
+def generate_demo_dataframe(n=400, seed=123):
+    rng = np.random.default_rng(seed)
+    edades = rng.integers(18, 65, size=n)
+    genero = rng.choice(["M", "F"], size=n, p=[0.48, 0.52])
+    ingreso = rng.normal(32000, 8000, size=n).clip(12000, 70000).astype(int)
+    gasto = (ingreso * rng.uniform(0.08, 0.18, size=n)).astype(int)
+    sabor = rng.choice(["fresa", "mora", "mixta"], size=n, p=[0.5, 0.35, 0.15])
+    precio = (rng.normal(120, 18, size=n) + (sabor == "mora") * 8 + (sabor == "mixta") * 4).clip(80, 200).astype(int)
+    intereses = rng.choice(["productos frutales", "fitness", "sin alcohol", "artesanal"], size=n, p=[0.35, 0.2, 0.3, 0.15])
+
+    df = pd.DataFrame({
+        "edad": edades,
+        "genero": genero,
+        "ingreso": ingreso,
+        "gasto_mensual": gasto,
+        "sabor_preferido": sabor,
+        "precio_pagado": precio,
+        "intereses": intereses
+    })
+    return df
+
+def _init_demo_df():
+    """Carga dataset DEMO en memoria (sin CSV)."""
+    global CURRENT_DF, CURRENT_FILENAME
+    if CURRENT_DF is None:
+        CURRENT_DF = generate_demo_dataframe()
+        CURRENT_FILENAME = "DEMO_DinoBrew.csv"
+
+_init_demo_df()
 
 
 # ----------------------------------
@@ -391,28 +414,19 @@ CURRENT_FILENAME = None
 # ----------------------------------
 with app.app_context():
     db.create_all()
-
     insp = inspect(db.engine)
 
     # users table hardenings
     cols = [c['name'] for c in insp.get_columns('users')]
     if 'is_admin' not in cols:
-        db.session.execute(
-            text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0;")
-        )
+        db.session.execute(text("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0;"))
         db.session.commit()
     if 'created_at' not in cols:
-        db.session.execute(
-            text("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;")
-        )
+        db.session.execute(text("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;"))
         db.session.commit()
 
     if not User.query.filter_by(email="admin@local").first():
-        admin = User(
-            name="Administrador",
-            email="admin@local",
-            is_admin=True
-        )
+        admin = User(name="Administrador", email="admin@local", is_admin=True)
         admin.set_password("admin123")
         db.session.add(admin)
         db.session.commit()
@@ -421,12 +435,9 @@ with app.app_context():
         db.session.add(Flavor(name="Fresa & Mora"))
         db.session.commit()
 
-    # ml_runs schema_json
     ml_cols = [c['name'] for c in insp.get_columns('ml_runs')]
     if 'schema_json' not in ml_cols:
-        db.session.execute(
-            text("ALTER TABLE ml_runs ADD COLUMN schema_json TEXT NULL;")
-        )
+        db.session.execute(text("ALTER TABLE ml_runs ADD COLUMN schema_json TEXT NULL;"))
         db.session.commit()
 
 
@@ -562,11 +573,10 @@ def admin_users_create():
 
 
 # ----------------------------------
-# Rutas principales + EDA
+# Rutas principales
 # ----------------------------------
 @app.get("/")
 def index():
-    # Renderiza inicio.html; si no existe, deja log y muestra fallback sin 500.
     try:
         return render_template("inicio.html", title="Inicio", filename=CURRENT_FILENAME)
     except TemplateNotFound as e:
@@ -592,10 +602,6 @@ def index():
                 <h1>DinoBrew</h1>
                 <p>No se encontró <code>templates/inicio.html</code> en el servidor.</p>
                 <p>Abre <code>/_debug/templates</code> para ver qué archivos llegaron.</p>
-                <ul>
-                  <li>Verifica que el archivo esté <strong>commiteado</strong> y <strong>pusheado</strong>.</li>
-                  <li>Confirma que la carpeta es <code>templates/</code> y el nombre exacto es <code>inicio.html</code>.</li>
-                </ul>
               </body>
             </html>
             """,
@@ -603,53 +609,23 @@ def index():
         )
 
 
-@app.post("/upload")
+# ---------- Página de Analytics (sin CSV) ----------
+@app.get("/analytics")
 @login_required
-def upload():
-    global CURRENT_DF, CURRENT_FILENAME
-
-    f = request.files.get("file")
-    if not f or f.filename == "":
-        flash("Selecciona un archivo .csv", "warning")
-        return redirect(url_for("index"))
-
-    if not allowed_file(f.filename):
-        flash("Formato no permitido (usa .csv).", "danger")
-        return redirect(url_for("index"))
-
-    path = os.path.join(app.config["UPLOAD_FOLDER"], f.filename)
-    f.save(path)
-
-    try:
-        try:
-            df = pd.read_csv(path, sep=";")
-            if df.shape[1] == 1:
-                df = pd.read_csv(path)
-        except Exception:
-            df = pd.read_csv(path)
-
-        CURRENT_DF = df
-        CURRENT_FILENAME = f.filename
-
-        session['dataset_path'] = path
-
-        flash(f"Archivo {f.filename} cargado correctamente.", "success")
-        return redirect(url_for("entendimiento"))
-
-    except Exception as e:
-        flash(f"Error leyendo CSV: {e}", "danger")
-        return redirect(url_for("index"))
-
-
-@app.get("/analytics")  # Cambiamos el nombre de la ruta a /analytics
-@login_required
-def analytics():  # Cambiamos el nombre de la función
-    # Ya no necesitamos verificar CURRENT_DF
+def analytics():
+    _init_demo_df()
+    cols = CURRENT_DF.columns.tolist() if CURRENT_DF is not None else []
+    row_count = int(CURRENT_DF.shape[0]) if CURRENT_DF is not None else 0
     return render_template(
-        "analytics.html",  # Usamos la plantilla analytics.html
-        title="DinoAnalyticsML"
+        "analytics.html",
+        title="DinoAnalyticsML",
+        columns=cols,
+        filename=CURRENT_FILENAME,
+        row_count=row_count
     )
 
+
+# ---------- APIs de análisis exploratorio ----------
 @app.get("/api/column-data")
 @login_required
 def api_column_data():
@@ -689,7 +665,7 @@ def api_column_data():
 def plot_corr():
     if CURRENT_DF is None:
         flash("No hay dataset cargado actualmente.", "warning")
-        return redirect(url_for("index"))
+        return redirect(url_for("analytics"))
 
     num_df = CURRENT_DF.select_dtypes(include=[np.number])
 
@@ -719,25 +695,17 @@ def plot_corr():
     return send_file(buf, mimetype="image/png")
 
 
-# ----------------------------------
-# Endpoint para obtener insights dinámicos
-# ----------------------------------
+# ---------- Insights rápidos (opcional) ----------
 @app.route('/api/insights')
 @login_required
 def get_insights():
     try:
-        if 'dataset_path' not in session:
+        if CURRENT_DF is None:
             return jsonify({"error": "No hay dataset cargado"}), 400
 
-        dataset_path = session['dataset_path']
-        if not os.path.exists(dataset_path):
-            return jsonify({"error": "El dataset no existe"}), 400
-
-        df = pd.read_csv(dataset_path)
-
+        df = CURRENT_DF
         insights = {}
 
-        # 1. Perfil de cliente
         if 'edad' in df.columns:
             edad_promedio = df['edad'].mean()
             edad_min = df['edad'].min()
@@ -746,10 +714,7 @@ def get_insights():
 
             if 'genero' in df.columns and 'gasto_mensual' in df.columns:
                 top_spenders = df.nlargest(5, 'gasto_mensual')
-                genero_comun = (
-                    top_spenders['genero'].mode().iloc[0]
-                    if not top_spenders.empty else "No disponible"
-                )
+                genero_comun = top_spenders['genero'].mode().iloc[0] if not top_spenders.empty else "No disponible"
             else:
                 genero_comun = "No disponible"
 
@@ -782,13 +747,10 @@ def get_insights():
             "interests": intereses
         }
 
-        # 2. Preferencias
         if 'sabor_preferido' in df.columns:
             preferencias = df['sabor_preferido'].value_counts().reset_index()
             preferencias.columns = ['name', 'count']
-            preferencias['percentage'] = (
-                preferencias['count'] / preferencias['count'].sum() * 100
-            ).round(1)
+            preferencias['percentage'] = (preferencias['count'] / preferencias['count'].sum() * 100).round(1)
             insights['preferences'] = preferencias[['name', 'percentage']].to_dict('records')
         else:
             insights['preferences'] = [
@@ -796,7 +758,6 @@ def get_insights():
                 {"name": "moras", "percentage": 35.0}
             ]
 
-        # 3. Precios óptimos
         if 'sabor_preferido' in df.columns and 'precio_pagado' in df.columns:
             precios_optimos = []
             for sabor in df['sabor_preferido'].unique():
@@ -819,13 +780,13 @@ def get_insights():
 # ----------------------------------
 # Lotes / Lecturas / Des-alcoholización
 # ----------------------------------
-def plato_from_sg(sg: float | None):
+def plato_from_sg(sg):
     if not sg:
         return None
     return (-616.868) + 1111.14*sg - 630.272*(sg**2) + 135.997*(sg**3)
 
 
-def abv_estimate(og: float | None, fg: float | None):
+def abv_estimate(og, fg):
     if not og or not fg:
         return None
     return max(0.0, (og - fg) * 131.25)
@@ -979,68 +940,12 @@ def api_batch_series(batch_id):
     })
 
 
-@app.post("/batches/<int:batch_id>/readings/upload")
-@login_required
-def readings_upload(batch_id):
-    from csv import DictReader
-
-    b = Batch.query.get_or_404(batch_id)
-    f = request.files.get("file")
-
-    if not f or f.filename == "":
-        flash("Selecciona un CSV con columnas: ts,temp_c,sg,ph", "warning")
-        return redirect(url_for("batch_detail", batch_id=b.id))
-
-    try:
-        tmp_path = os.path.join(
-            UPLOAD_DIR,
-            f"readings_{b.id}_{int(datetime.utcnow().timestamp())}.csv"
-        )
-        f.save(tmp_path)
-
-        with open(tmp_path, "r", encoding="utf-8") as fh:
-            dr = DictReader(fh)
-            req_cols = {"ts", "temp_c", "sg", "ph"}
-            if not req_cols.issubset(set(dr.fieldnames or [])):
-                flash("El CSV debe tener columnas: ts,temp_c,sg,ph", "danger")
-                return redirect(url_for("batch_detail", batch_id=b.id))
-
-            added = 0
-            for row in dr:
-                ts = datetime.fromisoformat(row["ts"])
-                temp = float(row["temp_c"]) if row["temp_c"] else None
-                sg = float(row["sg"]) if row["sg"] else None
-                ph = float(row["ph"]) if row["ph"] else None
-
-                fr = FermentationReading(
-                    batch_id=b.id,
-                    ts=ts,
-                    temp_c=temp,
-                    sg=sg,
-                    ph=ph
-                )
-                db.session.add(fr)
-                added += 1
-
-            db.session.commit()
-
-        os.remove(tmp_path)
-        flash(f"{added} lecturas importadas.", "success")
-
-    except Exception as e:
-        flash(f"Error importando CSV: {e}", "danger")
-
-    return redirect(url_for("batch_detail", batch_id=b.id))
-
-
 # ----------------------------------
-# API de entrenamiento ML
+# API de entrenamiento ML general (usa dataset DEMO)
 # ----------------------------------
 @app.post("/api/ml/train")
 @login_required
 def api_ml_train():
-    global CURRENT_DF, CURRENT_FILENAME
-
     if CURRENT_DF is None:
         return jsonify({"error": "No hay dataset cargado."}), 400
 
@@ -1073,16 +978,12 @@ def api_ml_train():
         if not task:
             task = infer_task_from_target(y)
 
-        # clasificación → y string si no es numérica
         if task == "classification":
             if not pd.api.types.is_numeric_dtype(y):
                 y = y.astype(str)
 
         X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=test_size,
-            random_state=random_state,
+            X, y, test_size=test_size, random_state=random_state,
             stratify=y if task == "classification" else None
         )
 
@@ -1093,7 +994,6 @@ def api_ml_train():
 
         pipe = build_pipeline(task, algorithm, X_train)
         pipe.fit(X_train, y_train)
-
         y_pred = pipe.predict(X_test)
 
         metrics = {}
@@ -1102,41 +1002,22 @@ def api_ml_train():
             mse = mean_squared_error(y_test, y_pred)
             rmse = float(np.sqrt(mse))
             r2 = r2_score(y_test, y_pred)
-
-            metrics = {
-                "MAE": mae,
-                "MSE": mse,
-                "RMSE": rmse,
-                "R2": r2
-            }
+            metrics = {"MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2}
         else:
             acc = accuracy_score(y_test, y_pred)
-            prec = precision_score(
-                y_test, y_pred, average="macro", zero_division=0
-            )
-            rec = recall_score(
-                y_test, y_pred, average="macro", zero_division=0
-            )
-            f1 = f1_score(
-                y_test, y_pred, average="macro", zero_division=0
-            )
+            prec = precision_score(y_test, y_pred, average="macro", zero_division=0)
+            rec = recall_score(y_test, y_pred, average="macro", zero_division=0)
+            f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
             cm = confusion_matrix(y_test, y_pred).tolist()
-
             metrics = {
-                "accuracy": acc,
-                "precision_macro": prec,
-                "recall_macro": rec,
-                "f1_macro": f1,
-                "confusion_matrix": cm
+                "accuracy": acc, "precision_macro": prec,
+                "recall_macro": rec, "f1_macro": f1, "confusion_matrix": cm
             }
 
         # Construir esquema simple para predicción
         schema = {}
         for c in features:
-            if pd.api.types.is_numeric_dtype(X[c]):
-                schema[c] = "number"
-            else:
-                schema[c] = "string"
+            schema[c] = "number" if pd.api.types.is_numeric_dtype(X[c]) else "string"
 
         run = MLRun(
             user_id=getattr(current_user, "id", None),
@@ -1179,10 +1060,7 @@ def api_ml_train():
 def api_ml_runs():
     q = MLRun.query
     if not getattr(current_user, "is_admin", False):
-        q = q.filter(
-            (MLRun.user_id == current_user.id) |
-            (MLRun.user_id.is_(None))
-        )
+        q = q.filter((MLRun.user_id == current_user.id) | (MLRun.user_id.is_(None)))
 
     runs = q.order_by(MLRun.id.desc()).limit(50).all()
 
@@ -1206,93 +1084,366 @@ def api_ml_runs():
 @app.get("/download/model/<int:run_id>")
 @login_required
 def download_model(run_id):
+    """Descarga modelos de corridas ML (NO confundir con /models/<file>)."""
     r = MLRun.query.get_or_404(run_id)
 
     if not os.path.exists(r.model_path):
         flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
+        return redirect(url_for("analytics"))
 
     fname = f"modelo_{r.task}_{r.algorithm}_run{r.id}.joblib"
-    return send_file(
-        r.model_path,
-        as_attachment=True,
-        download_name=fname
-    )
+    return send_file(r.model_path, as_attachment=True, download_name=fname)
 
 
 # ----------------------------------
-# Predicción en línea
+# PREDICCIÓN DE VENCIMIENTO (sin CSV)
 # ----------------------------------
-@app.get("/predict/<int:run_id>")
-@login_required
-def predict_form(run_id):
-    r = MLRun.query.get_or_404(run_id)
+def expiry_heuristic(payload: dict):
+    """Heurística cuando no hay modelo entrenado."""
+    packaging_date = payload.get("packaging_date")
+    fermentation_days = int(payload.get("fermentation_days", 14))
+    storage_temp_c = float(payload.get("storage_temp_c", 6.0))
+    pasteurized = int(payload.get("pasteurized", 0))
+    fruit_type = str(payload.get("fruit_type", "fresa"))
+    bottle_type = str(payload.get("bottle_type", "vidrio_330"))
+    ph_final = float(payload.get("ph_final", 4.0))
+    distribution_days = int(payload.get("distribution_days", 3))
+    initial_gravity = float(payload.get("initial_gravity", 1.040))
+    final_gravity = float(payload.get("final_gravity", 1.010))
 
-    if not os.path.exists(r.model_path):
-        flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
-
-    features = json.loads(r.features_json)
-    schema = json.loads(r.schema_json or "{}")
-
-    return render_template(
-        "predict.html",
-        title=f"Predecir · Modelo {r.id}",
-        run=r,
-        features=features,
-        schema=schema
-    )
-
-
-@app.post("/predict/<int:run_id>")
-@login_required
-def predict_submit(run_id):
-    r = MLRun.query.get_or_404(run_id)
-
-    if not os.path.exists(r.model_path):
-        flash("Archivo de modelo no encontrado.", "danger")
-        return redirect(url_for("entendimiento"))
-
-    features = json.loads(r.features_json)
-    schema = json.loads(r.schema_json or "{}")
-
-    row = {}
-    for f in features:
-        val = request.form.get(f, "")
-        if schema.get(f) == "number":
-            try:
-                row[f] = float(val) if val != "" else np.nan
-            except ValueError:
-                row[f] = np.nan
-        else:
-            row[f] = val
-
-    X_infer = pd.DataFrame([row], columns=features)
-    pipe = joblib.load(r.model_path)
+    base = 120.0
+    base += max(0.0, 6.0 - storage_temp_c) * 1.0
+    base -= max(0.0, storage_temp_c - 6.0) * 2.0
+    if pasteurized:
+        base += 15.0
+    base += max(0.0, 4.4 - ph_final) * 5.0
+    base -= distribution_days * 0.5
+    if fruit_type == "mixta":
+        base += 5.0
+    if bottle_type.startswith("vidrio"):
+        base += 3.0
+    noise = 0.0
+    shelf_life_days = int(np.clip(base + noise, 30, 365))
 
     try:
-        y_pred = pipe.predict(X_infer)
-        y_proba = None
+        pk = datetime.strptime(packaging_date, "%Y-%m-%d").date()
+    except Exception:
+        pk = date.today()
+    expiry = pk + timedelta(days=shelf_life_days)
 
+    return {
+        "ok": True,
+        "shelf_life_days": shelf_life_days,
+        "expiry_date": expiry.strftime("%Y-%m-%d"),
+        "note": "Predicción heurística (modelo no encontrado)."
+    }
+
+
+def generate_synthetic_expiry_df(n=500, seed=42):
+    rng = np.random.default_rng(seed)
+    fruits = ["fresa", "mora", "mixta"]
+    bottles = ["vidrio_330", "lata_355", "vidrio_500"]
+    start_date = datetime(2025, 1, 1).date()
+
+    rows = []
+    for _ in range(n):
+        fermentation_days = int(rng.integers(10, 21))
+        storage_temp_c = float(rng.normal(6.0, 1.5))
+        pasteurized = int(rng.random() < 0.45)
+        fruit_type = str(rng.choice(fruits))
+        bottle_type = str(rng.choice(bottles))
+        ph_final = float(np.clip(rng.normal(4.1, 0.15), 3.6, 4.6))
+        distribution_days = int(np.clip(rng.normal(3.0, 2.0), 0, 20))
+        og = float(np.round(1.035 + rng.random() * 0.02, 3))
+        fg = float(np.round(1.006 + rng.random() * 0.01, 3))
+        packaging_date = start_date + timedelta(days=int(rng.integers(0, 365)))
+
+        base = 120.0
+        base += max(0.0, 6.0 - storage_temp_c) * 1.0
+        base -= max(0.0, storage_temp_c - 6.0) * 2.0
+        if pasteurized:
+            base += 15.0
+        base += max(0.0, 4.4 - ph_final) * 5.0
+        base -= distribution_days * 0.5
+        if fruit_type == "mixta":
+            base += 5.0
+        if bottle_type.startswith("vidrio"):
+            base += 3.0
+
+        noise = float(rng.normal(0.0, 7.0))
+        shelf = int(np.clip(base + noise, 30, 365))
+
+        rows.append({
+            "packaging_date": packaging_date.isoformat(),
+            "fermentation_days": fermentation_days,
+            "storage_temp_c": storage_temp_c,
+            "pasteurized": pasteurized,
+            "fruit_type": fruit_type,
+            "bottle_type": bottle_type,
+            "ph_final": ph_final,
+            "distribution_days": distribution_days,
+            "initial_gravity": og,
+            "final_gravity": fg,
+            "shelf_life_days": shelf
+        })
+
+    return pd.DataFrame(rows)
+
+
+def _prepare_expiry_Xy(df: pd.DataFrame):
+    """Prepara X, y y lista de features crudas (incluye packaging_date_ordinal)."""
+    df = df.copy()
+    df["packaging_date"] = pd.to_datetime(df["packaging_date"], errors="coerce")
+    df["packaging_date_ordinal"] = df["packaging_date"].map(lambda x: x.toordinal() if pd.notnull(x) else np.nan)
+
+    target = "shelf_life_days"
+    feature_cols = [
+        "packaging_date_ordinal", "fermentation_days", "storage_temp_c", "pasteurized",
+        "fruit_type", "bottle_type", "ph_final", "distribution_days",
+        "initial_gravity", "final_gravity"
+    ]
+    X = df[feature_cols].copy()
+    y = pd.to_numeric(df[target], errors="coerce")
+    return X, y, feature_cols
+
+
+def train_expiry_from_df(
+    df: pd.DataFrame,
+    n_estimators: int = 300,
+    test_size: float = 0.2,
+    random_state: int = 42,
+    n_samples: int | None = None
+):
+    """Entrena modelo de vencimiento y guarda meta en JSON."""
+    X, y, feature_cols = _prepare_expiry_Xy(df)
+
+    num_cols = ["packaging_date_ordinal", "fermentation_days", "storage_temp_c",
+                "pasteurized", "ph_final", "distribution_days", "initial_gravity", "final_gravity"]
+    cat_cols = ["fruit_type", "bottle_type"]
+
+    numeric_processor = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", StandardScaler())
+    ])
+    categorical_processor = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("ohe", _safe_ohe())
+    ])
+    pre = ColumnTransformer(
+        transformers=[
+            ("num", numeric_processor, num_cols),
+            ("cat", categorical_processor, cat_cols)
+        ]
+    )
+
+    model = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
+    pipe = Pipeline(steps=[("pre", pre), ("model", model)])
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=random_state
+    )
+    pipe.fit(X_train, y_train)
+    y_pred = pipe.predict(X_test)
+
+    mae = float(mean_absolute_error(y_test, y_pred))
+    mse = float(mean_squared_error(y_test, y_pred))
+    rmse = float(np.sqrt(mse))
+    r2 = float(r2_score(y_test, y_pred))
+
+    joblib.dump(pipe, EXPIRY_MODEL_PATH)
+
+    # Guardar meta
+    meta = {
+        "trained": True,
+        "trained_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "algorithm": "RandomForestRegressor",
+        "params": {
+            "n_estimators": n_estimators,
+            "test_size": test_size,
+            "random_state": random_state,
+            "n_samples": n_samples
+        },
+        "metrics": {"mae": round(mae, 3), "rmse": round(rmse, 3), "r2": round(r2, 4)},
+        "feature_names": feature_cols,
+        "target": "shelf_life_days",
+        "model_relpath": "uploads/models/expiry_model.joblib"
+    }
+    try:
+        meta["model_size_bytes"] = os.path.getsize(EXPIRY_MODEL_PATH)
+    except Exception:
+        meta["model_size_bytes"] = None
+
+    with open(EXPIRY_META_PATH, "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+
+    return {"MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2, "meta": meta}
+
+
+def _raw_permutation_importance(pipe, X_test: pd.DataFrame, y_test: pd.Series, score="r2", seed=42):
+    """Permutation importance simple sobre columnas crudas (antes del preprocesado)."""
+    y_pred = pipe.predict(X_test)
+    if score == "r2":
+        base = r2_score(y_test, y_pred)
+    else:
+        base = -mean_absolute_error(y_test, y_pred)  # mayor es mejor
+
+    rng = np.random.default_rng(seed)
+    imps = []
+    for col in X_test.columns:
+        Xp = X_test.copy()
+        Xp[col] = rng.permutation(Xp[col].values)
+        yp = pipe.predict(Xp)
+        if score == "r2":
+            s = r2_score(y_test, yp)
+            imp = base - s
+        else:
+            s = -mean_absolute_error(y_test, yp)
+            imp = base - s
+        imps.append(max(0.0, float(imp)))
+    return imps
+
+
+@app.post("/api/expiry/bootstrap")
+@login_required
+def api_expiry_bootstrap():
+    """
+    Entrena un modelo DEMO con datos sintéticos.
+    Acepta JSON:
+      { "n_samples": 800, "n_estimators": 300, "test_size": 0.2, "random_state": 42 }
+    Retrocompatibilidad: también acepta ?n=500 (solo tamaño).
+    """
+    # Leer JSON o query param
+    payload = {}
+    try:
+        if request.is_json:
+            payload = request.get_json(force=True) or {}
+    except Exception:
+        payload = {}
+
+    try:
+        n = int(payload.get("n_samples", request.args.get("n", 500)))
+    except Exception:
+        n = 500
+
+    n_estimators = int(payload.get("n_estimators", 300))
+    test_size = float(payload.get("test_size", 0.2))
+    random_state = int(payload.get("random_state", 42))
+
+    df = generate_synthetic_expiry_df(n=n, seed=random_state)
+    out = train_expiry_from_df(
+        df,
+        n_estimators=n_estimators,
+        test_size=test_size,
+        random_state=random_state,
+        n_samples=n
+    )
+    return jsonify({
+        "ok": True,
+        "metrics": out if isinstance(out, dict) else {},
+        "note": f"Modelo de vencimiento entrenado con {n} filas sintéticas.",
+    })
+
+
+@app.get("/api/expiry/status")
+@login_required
+def api_expiry_status():
+    trained = os.path.exists(EXPIRY_MODEL_PATH) and os.path.exists(EXPIRY_META_PATH)
+    resp = {"trained": bool(trained)}
+    if trained:
         try:
-            y_proba = pipe.predict_proba(X_infer)[0].tolist()
-        except Exception:
-            pass
+            with open(EXPIRY_META_PATH, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            resp.update({
+                "trained_at": meta.get("trained_at"),
+                "metrics": meta.get("metrics"),
+                "model_size": (f'{meta.get("model_size_bytes", 0):,} bytes' if meta.get("model_size_bytes") else None),
+                "download_url": "/models/expiry_model.joblib"
+            })
+        except Exception as e:
+            resp["error"] = f"meta_read: {e}"
+    return jsonify(resp)
 
-        return render_template(
-            "predict.html",
-            title=f"Predecir · Modelo {r.id}",
-            run=r,
-            features=features,
-            schema=schema,
-            input_values=row,
-            prediction=y_pred[0],
-            proba=y_proba
+
+@app.get("/api/expiry/fi")
+@login_required
+def api_expiry_fi():
+    """Permutation Importance sobre features crudas del dominio sintético."""
+    if not os.path.exists(EXPIRY_MODEL_PATH) or not os.path.exists(EXPIRY_META_PATH):
+        labels = ["storage_temp_c","pasteurized","ph_final","distribution_days","fermentation_days",
+                  "fruit_type","bottle_type","initial_gravity","final_gravity","packaging_date_ordinal"]
+        return jsonify({"labels": labels, "importances": [0.35,0.22,0.18,0.12,0.07,0.03,0.02,0.01,0.0,0.0]})
+
+    try:
+        with open(EXPIRY_META_PATH, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+        params = meta.get("params", {}) or {}
+        n = int(params.get("n_samples") or 500)
+        seed = int(params.get("random_state") or 42)
+        test_size = float(params.get("test_size") or 0.2)
+
+        pipe = joblib.load(EXPIRY_MODEL_PATH)
+
+        df = generate_synthetic_expiry_df(n=n, seed=seed)
+        X, y, feature_cols = _prepare_expiry_Xy(df)
+        X_tr, X_te, y_tr, y_te = train_test_split(
+            X, y, test_size=test_size, random_state=seed
         )
 
+        imps = _raw_permutation_importance(pipe, X_te, y_te, score="r2", seed=seed)
+        pairs = sorted(zip(feature_cols, imps), key=lambda t: t[1], reverse=True)
+        labels = [p[0] for p in pairs]
+        values = [round(float(p[1]), 5) for p in pairs]
+        return jsonify({"labels": labels, "importances": values})
     except Exception as e:
-        flash(f"Error al predecir: {e}", "danger")
-        return redirect(url_for("predict_form", run_id=r.id))
+        app.logger.exception("fi failed")
+        return jsonify({"labels": [], "importances": [], "error": str(e)})
+
+
+@app.post("/api/expiry/predict")
+@login_required
+def api_expiry_predict():
+    """Predicción manual: usa el modelo si existe; si no, heurística."""
+    payload = request.get_json(force=True)
+
+    if os.path.exists(EXPIRY_MODEL_PATH):
+        try:
+            pipe = joblib.load(EXPIRY_MODEL_PATH)
+        except Exception:
+            # si el modelo falla, caemos a heurística
+            h = expiry_heuristic(payload)
+            h["note"] = "Modelo corrupto; usando heurística."
+            return jsonify(h)
+
+        # preparar fila
+        try:
+            packaging_date = payload.get("packaging_date") or date.today().strftime("%Y-%m-%d")
+            pk_dt = datetime.strptime(packaging_date, "%Y-%m-%d").date()
+            row = {
+                "packaging_date_ordinal": pk_dt.toordinal(),
+                "fermentation_days": int(payload.get("fermentation_days", 14)),
+                "storage_temp_c": float(payload.get("storage_temp_c", 6.0)),
+                "pasteurized": int(payload.get("pasteurized", 0)),
+                "fruit_type": str(payload.get("fruit_type", "fresa")),
+                "bottle_type": str(payload.get("bottle_type", "vidrio_330")),
+                "ph_final": float(payload.get("ph_final", 4.0)),
+                "distribution_days": int(payload.get("distribution_days", 3)),
+                "initial_gravity": float(payload.get("initial_gravity", 1.040)),
+                "final_gravity": float(payload.get("final_gravity", 1.010)),
+            }
+            X = pd.DataFrame([row])
+            pred_days = int(round(float(pipe.predict(X)[0])))
+            expiry_date = pk_dt + timedelta(days=pred_days)
+            return jsonify({
+                "ok": True,
+                "shelf_life_days": int(np.clip(pred_days, 1, 1000)),
+                "expiry_date": expiry_date.strftime("%Y-%m-%d"),
+                "note": "Predicción con modelo entrenado."
+            })
+        except Exception as e:
+            return jsonify({"ok": False, "error": f"No se pudo predecir con el modelo: {e}"}), 400
+
+    # sin modelo → heurística
+    return jsonify(expiry_heuristic(payload))
 
 
 # ----------------------------------
@@ -1319,25 +1470,13 @@ def producto_folleto():
 
     try:
         if os.path.exists(udec_path):
-            c.drawImage(
-                ImageReader(udec_path),
-                x, y - logo_h,
-                width=120, height=logo_h,
-                preserveAspectRatio=True,
-                mask='auto'
-            )
+            c.drawImage(ImageReader(udec_path), x, y - logo_h, width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
     except Exception:
         pass
 
     try:
         if os.path.exists(loja_path):
-            c.drawImage(
-                ImageReader(loja_path),
-                width - margin - 120, y - logo_h,
-                width=120, height=logo_h,
-                preserveAspectRatio=True,
-                mask='auto'
-            )
+            c.drawImage(ImageReader(loja_path), width - margin - 120, y - logo_h, width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
     except Exception:
         pass
 
@@ -1413,7 +1552,6 @@ def producto_folleto():
         y_cursor -= row_h
         c.setFillColor(colors.white)
         c.rect(table_x, y_cursor, col1_w + col2_w, row_h, fill=1, stroke=1)
-
         c.setFillColor(colors.black)
         c.drawString(table_x + 6, y_cursor + 5, label)
         c.drawString(table_x + col1_w + 6, y_cursor + 5, value)
@@ -1428,13 +1566,7 @@ def producto_folleto():
         qr_buf.seek(0)
 
         qr_size = 120
-        c.drawImage(
-            ImageReader(qr_buf),
-            width - margin - qr_size,
-            y - qr_size + 10,
-            width=qr_size, height=qr_size,
-            mask='auto'
-        )
+        c.drawImage(ImageReader(qr_buf), width - margin - qr_size, y - qr_size + 10, width=qr_size, height=qr_size, mask='auto')
 
         c.setFont("Helvetica", 9)
         c.drawRightString(width - margin, y - qr_size - 4, "Escanea para saber más")
@@ -1443,21 +1575,13 @@ def producto_folleto():
 
     c.setFillColor(colors.gray)
     c.setFont("Helvetica-Oblique", 9)
-    c.drawString(
-        x, 24,
-        "Proyecto académico — Universidad de Cundinamarca & Universidad de Loja — 0.0% ABV"
-    )
+    c.drawString(x, 24, "Proyecto académico — Universidad de Cundinamarca & Universidad de Loja — 0.0% ABV")
 
     c.showPage()
     c.save()
     buf.seek(0)
 
-    return send_file(
-        buf,
-        mimetype="application/pdf",
-        as_attachment=True,
-        download_name="Folleto_Cerveza_Sin_Alcohol.pdf"
-    )
+    return send_file(buf, mimetype="application/pdf", as_attachment=True, download_name="Folleto_Cerveza_Sin_Alcohol.pdf")
 
 
 @app.get("/producto/ficha")
@@ -1476,25 +1600,13 @@ def producto_ficha():
 
     try:
         if os.path.exists(udec_path):
-            c.drawImage(
-                ImageReader(udec_path),
-                x, y - logo_h,
-                width=120, height=logo_h,
-                preserveAspectRatio=True,
-                mask='auto'
-            )
+            c.drawImage(ImageReader(udec_path), x, y - logo_h, width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
     except Exception:
         pass
 
     try:
         if os.path.exists(loja_path):
-            c.drawImage(
-                ImageReader(loja_path),
-                width - margin - 120, y - logo_h,
-                width=120, height=logo_h,
-                preserveAspectRatio=True,
-                mask='auto'
-            )
+            c.drawImage(ImageReader(loja_path), width - margin - 120, y - logo_h, width=120, height=logo_h, preserveAspectRatio=True, mask='auto')
     except Exception:
         pass
 
@@ -1545,12 +1657,7 @@ def producto_ficha():
     for k, v in specs:
         y_cursor -= row_h
         c.setFillColor(colors.white)
-        c.rect(
-            table_x, y_cursor,
-            col1_w + col2_w, row_h,
-            fill=1, stroke=1
-        )
-
+        c.rect(table_x, y_cursor, col1_w + col2_w, row_h, fill=1, stroke=1)
         c.setFillColor(colors.black)
         c.drawString(table_x + 6, y_cursor + 5, k)
         c.drawString(table_x + col1_w + 6, y_cursor + 5, v)
@@ -1609,40 +1716,22 @@ def producto_ficha():
         qr_buf.seek(0)
 
         qr_size = 120
-        c.drawImage(
-            ImageReader(qr_buf),
-            width - margin - qr_size,
-            y - qr_size + 10,
-            width=qr_size, height=qr_size,
-            mask='auto'
-        )
+        c.drawImage(ImageReader(qr_buf), width - margin - qr_size, y - qr_size + 10, width=qr_size, height=qr_size, mask='auto')
 
         c.setFont("Helvetica", 9)
-        c.drawRightString(
-            width - margin,
-            y - qr_size - 4,
-            "Escanea esta ficha técnica"
-        )
+        c.drawRightString(width - margin, y - qr_size - 4, "Escanea esta ficha técnica")
     except Exception:
         pass
 
     c.setFillColor(colors.gray)
     c.setFont("Helvetica-Oblique", 9)
-    c.drawString(
-        x, 24,
-        "Proyecto académico — Universidad de Cundinamarca & Universidad de Loja — 0.0% ABV"
-    )
+    c.drawString(x, 24, "Proyecto académico — Universidad de Cundinamarca & Universidad de Loja — 0.0% ABV")
 
     c.showPage()
     c.save()
     buf.seek(0)
 
-    return send_file(
-        buf,
-        mimetype="application/pdf",
-        as_attachment=True,
-        download_name="Ficha_Tecnica_Cerveza_00_FresaMora.pdf"
-    )
+    return send_file(buf, mimetype="application/pdf", as_attachment=True, download_name="Ficha_Tecnica_Cerveza_00_FresaMora.pdf")
 
 
 # NUEVA RUTA PÚBLICA: Nosotros 
@@ -1651,13 +1740,10 @@ def nosotros():
     return render_template("nosotros.html", title="Nosotros")
 
 
-
-
 # ----------------------------------
-# NUEVO: enviar email
+# Enviar email de contacto
 # ----------------------------------
 def send_contact_email(cm: ContactMessage) -> bool:
-    """Devuelve True si se envió OK, False si falló."""
     enabled = os.getenv("MAIL_ENABLED", "1") == "1"
     if not enabled:
         return False
@@ -1703,7 +1789,7 @@ def send_contact_email(cm: ContactMessage) -> bool:
 
 
 # ----------------------------------
-# NUEVA RUTA PÚBLICA: Contáctenos
+# Contáctenos
 # ----------------------------------
 @app.route("/contactenos", methods=["GET", "POST"])
 def contactenos():
@@ -1718,10 +1804,7 @@ def contactenos():
             return redirect(url_for("contactenos", _anchor="form"))
 
         cm = ContactMessage(
-            name=name,
-            email=email,
-            subject=subject,
-            message=message,
+            name=name, email=email, subject=subject, message=message,
             ip=request.headers.get("X-Forwarded-For", request.remote_addr),
             user_id=getattr(current_user, "id", None)
         )
@@ -1739,8 +1822,6 @@ def contactenos():
         return redirect(url_for("contactenos", _anchor="form"))
 
     return render_template("contactenos.html", title="Contáctenos")
-
-
 
 
 # ----------------------------------
@@ -1773,8 +1854,27 @@ def admin_contactos_export():
 
 
 # ----------------------------------
+# Descarga genérica de archivos en /uploads/models sin pisar download_model
+# ----------------------------------
+@app.route("/models/<path:filename>")
+def download_model_file(filename):
+    return send_from_directory(MODELS_DIR, filename, as_attachment=True)
+
+
+# ----------------------------------
+# Auto-bootstrap del modelo de vencimiento si no existe
+# ----------------------------------
+if not os.path.exists(EXPIRY_MODEL_PATH) and os.getenv("EXPIRY_AUTO_BOOTSTRAP", "1") == "1":
+    try:
+        df_boot = generate_synthetic_expiry_df(n=600, seed=123)
+        _m = train_expiry_from_df(df_boot, n_estimators=300, test_size=0.2, random_state=123, n_samples=600)
+        app.logger.info(f"[BOOTSTRAP] Modelo de vencimiento demo entrenado. Métricas: {_m}")
+    except Exception as e:
+        app.logger.error(f"[BOOTSTRAP] No se pudo entrenar el modelo demo: {e}")
+
+
+# ----------------------------------
 # Run (local)
 # ----------------------------------
 if __name__ == "__main__":
-    # Ejecuta local. En servidores usa Gunicorn (app:app).
     app.run(debug=True, port=int(os.getenv("PORT", "5000")))

@@ -1,325 +1,299 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Fondo general con degradado usando paleta Dinobrew -->
 <section class="min-h-screen bg-gradient-to-br from-brand-50 via-brand-100 to-white dark:from-ink-900 dark:via-ink-800 dark:to-ink-900 py-10">
-
-  <!-- Hero Section -->
-  <div class="relative max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-xl mb-14">
-    <!-- Imagen actualizada del segundo código -->
-    <img src="{{ url_for('static', filename='img/beer_hero.jpg') }}"
-         alt="Cerveza artesanal sin alcohol Fresa y Mora"
-         class="w-full h-96 object-cover brightness-75">
-    
-    <!-- Indicador de página activa -->
-    <div class="absolute top-4 right-4 z-20">
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-600/90 backdrop-blur-sm text-white text-sm font-medium shadow-lg">
-        <i class="fa-solid fa-chart-bar text-gold-300"></i>
-        <span>DinoAnalyticsML</span>
-      </div>
-    </div>
-    
-    <div class="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6">
-      <!-- Badge con animación sutil -->
-      <span class="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium mb-4 border border-white/25 animate-pulse">
-        Inteligencia Artificial para tu negocio
-      </span>
-      
-      <!-- Título principal con efecto de resplandor -->
-      <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-2xl relative">
-        <span class="bg-clip-text text-transparent bg-gradient-to-r from-white to-gold-200">DINOANALYTICSML</span>
-        <!-- Efecto de brillo -->
-        <span class="absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent blur-xl"></span>
-      </h1>
-      
-      <!-- Subtítulo con gradiente -->
-      <p class="text-lg md:text-2xl mt-3 font-light bg-clip-text text-transparent bg-gradient-to-r from-white to-gold-100">
-        Modelos de <span class="text-gold-300">Machine Learning</span> para análisis predictivo
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-extrabold text-brand-800 dark:text-gold-300">DinoAnalytics · Modelo de Vencimiento</h1>
+      <p class="text-brand-700/80 dark:text-slate-300 mt-1">
+        Entrena un modelo DEMO con datos sintéticos realistas y realiza predicciones manuales.
       </p>
-
-      <!-- Eslogan destacado visualmente -->
-      <div class="relative my-6 py-3">
-        <!-- Línea decorativa superior -->
-        <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-gold-400 to-transparent"></div>
-        
-        <!-- Eslogan con efectos visuales -->
-        <p class="text-xl md:text-2xl font-bold text-center tracking-wider">
-          <span class="inline-block px-2 py-1 mx-1 bg-clip-text text-transparent bg-gradient-to-r from-gold-300 to-gold-500">Precisión.</span>
-          <span class="inline-block px-2 py-1 mx-1 text-white">Innovación.</span>
-          <span class="inline-block px-2 py-1 mx-1 bg-clip-text text-transparent bg-gradient-to-r from-gold-300 to-gold-500">Resultados.</span>
-        </p>
-        
-        <!-- Línea decorativa inferior -->
-        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-gold-400 to-transparent"></div>
-      </div>
     </div>
-    
-    <!-- Franja decorativa inferior (ámbar/dorado) con animación -->
-    <div class="absolute bottom-0 left-0 w-full h-3 bg-gradient-to-r from-brand-600 via-brand-500 to-gold-600 animate-pulse"></div>
-    
-    <!-- Efectos decorativos adicionales -->
-    <div class="absolute top-0 left-0 w-full h-full pointer-events-none">
-      <!-- Destello superior izquierdo -->
-      <div class="absolute top-10 left-10 w-32 h-32 bg-gold-400/10 rounded-full filter blur-xl"></div>
-      <!-- Destello inferior derecho -->
-      <div class="absolute bottom-10 right-10 w-40 h-40 bg-brand-400/10 rounded-full filter blur-xl"></div>
-    </div>
-  </div>
 
-  <!-- Introducción a DinoAnalyticsML -->
-  <section class="py-20 md:py-28 bg-white dark:bg-ink-900">
-    <div class="container mx-auto px-6">
-      <div class="max-w-4xl mx-auto">
-       <div class="text-center mb-16">
-  <span class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4
-                bg-brand-100 text-brand-700 dark:bg-ink-800 dark:text-gold-300 border border-brand-200/70 dark:border-ink-700">
-    PLATAFORMA DE MACHINE LEARNING
-  </span>
-  <h2 class="text-4xl md:text-5xl font-extrabold text-brand-700 dark:text-gold-400 mb-6">DinoAnalyticsML Herramienta de Predicción</h2>
-</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Columna izquierda: Predicción manual -->
+      <div class="lg:col-span-2 glass rounded-2xl p-6 border border-white/10">
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Predicción manual</h2>
 
-<div class="space-y-8">
-  <div class="bg-brand-50 dark:bg-ink-800 rounded-2xl p-8 shadow-soft border-l-4 border-brand-500 transform hover:scale-[1.02] transition-transform duration-300">
-    <p class="text-brand-900/80 dark:text-gold-100 leading-relaxed text-lg">
-      <span class="font-semibold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es la plataforma exclusiva de Machine Learning diseñada para optimizar el proceso de producción.
-      Desarrollada pensando en las necesidades de DINOBREW, esta herramienta permite predecir la fecha de vencimiento de las cervezas, 
-      controlando la calidad del producto.
-    </p>
-    
-    <ul class="mt-4 space-y-2 text-brand-800 dark:text-slate-300 text-sm leading-relaxed">
-      <li class="flex gap-2">
-        <i class="fa-solid fa-check text-gold-400 mt-1"></i>
-        <span>Acceso a modelo predictivo para el proceso productivo.</span>
-      </li>
-      <li class="flex gap-2">
-        <i class="fa-solid fa-check text-gold-400 mt-1"></i>
-        <span>Interfaz intuitiva para ingresar datos y obtener predicciones.</span>
-      </li>
-    </ul>
-  </div>
-
-
-  <div class="rounded-2xl p-8 shadow-soft bg-gradient-to-r from-brand-100 to-gold-100 dark:from-ink-800 dark:to-ink-700 transform hover:scale-[1.02] transition-transform duration-300">
-    <p class="italic text-xl font-medium text-center text-brand-900/90 dark:text-gold-100">
-      <span class="font-bold text-brand-700 dark:text-gold-300">DinoAnalyticsML</span> es más que una tecnología:
-      es tu <span class="text-brand-700 dark:text-gold-300">aliado estratégico</span> para llevar la excelencia de DINOBREW al siguiente nivel.
-    </p>
-  </div>
-</div>
-            
-<!-- Sección de Predicción de Fecha de Vencimiento -->
-<section class="py-20 md:py-28 bg-white dark:bg-ink-900">
-  <div class="container mx-auto px-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="text-center mb-16">
-        <span class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4
-                      bg-brand-100 text-brand-700 dark:bg-ink-800 dark:text-gold-300 border border-brand-200/70 dark:border-ink-700">
-          MODELO PREDICTIVO
-        </span>
-        <h2 class="text-4xl md:text-5xl font-extrabold text-brand-700 dark:text-gold-400 mb-6">Predicción de Fecha de Vencimiento</h2>
-        <p class="text-lg text-brand-800 dark:text-slate-300 max-w-2xl mx-auto">
-          Ingresa los datos del proceso productivo para predecir la fecha de vencimiento de tu cerveza DINOBREW
-        </p>
-      </div>
-
-      <div class="glass rounded-3xl p-8 border border-white/10 shadow-soft">
-        <form id="predictionForm" class="space-y-6">
-          <div class="grid md:grid-cols-2 gap-6">
+        <div class="rounded-xl p-4 bg-white/70 dark:bg-ink-800/60 border border-white/20">
+          <div class="grid sm:grid-cols-2 gap-3">
             <div>
-              <label for="productionDate" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Fecha de Inicio del Proceso
-              </label>
-              <input type="date" id="productionDate" name="productionDate" required
-                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
+              <label class="block text-sm">Fecha de envasado</label>
+              <input id="pk_date" type="date" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
             </div>
-
             <div>
-              <label for="beerType" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Tipo de Cerveza
-              </label>
-              <select id="beerType" name="beerType" required
-                      class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                <option value="">Selecciona un sabor</option>
-                <option value="fresa">Fresa</option>
-                <option value="mora">Mora</option>
+              <label class="block text-sm">Días de fermentación</label>
+              <input id="ferment" type="number" min="1" max="30" value="14" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm">Temperatura bodega (°C)</label>
+              <input id="temp" type="number" step="0.1" value="6.0" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div class="flex items-center gap-2 mt-6">
+              <input id="pasteur" type="checkbox" class="h-4 w-4">
+              <label class="text-sm">Pasteurizado</label>
+            </div>
+            <div>
+              <label class="block text-sm">Fruta</label>
+              <select id="fruit" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+                <option>fresa</option><option>mora</option><option>mixta</option>
               </select>
             </div>
-
             <div>
-              <label for="fermentationDays" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Tiempo de Fermentación (días)
-              </label>
-              <input type="number" id="fermentationDays" name="fermentationDays" min="1" max="30" required
-                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            </div>
-
-            <div>
-              <label for="storageDays" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Tiempo de Almacenamiento (días)
-              </label>
-              <input type="number" id="storageDays" name="storageDays" min="1" max="90" required
-                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            </div>
-
-            <div>
-              <label for="temperature" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Temperatura de Almacenamiento (°C)
-              </label>
-              <input type="number" id="temperature" name="temperature" min="0" max="30" step="0.1" required
-                     class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-            </div>
-
-            <div>
-              <label for="packaging" class="block text-sm font-medium text-brand-900 dark:text-white mb-2">
-                Tipo de Envase
-              </label>
-              <select id="packaging" name="packaging" required
-                      class="w-full px-4 py-2 rounded-lg border border-brand-300 dark:border-ink-600 bg-white dark:bg-ink-800 text-brand-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-transparent">
-                <option value="">Selecciona un envase</option>
-                <option value="botella_vidrio">Botella de Vidrio</option>
-                <option value="lata">Lata de Aluminio</option>
-                <option value="barril">Barril</option>
+              <label class="block text-sm">Envase</label>
+              <select id="bottle" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+                <option>vidrio_330</option><option>vidrio_500</option><option>lata_355</option>
               </select>
+            </div>
+            <div>
+              <label class="block text-sm">pH final</label>
+              <input id="ph" type="number" step="0.01" value="4.0" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm">Días distribución</label>
+              <input id="dist" type="number" min="0" value="3" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm">OG</label>
+              <input id="og" type="number" step="0.001" value="1.040" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
+            </div>
+            <div>
+              <label class="block text-sm">FG</label>
+              <input id="fg" type="number" step="0.001" value="1.010" class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
             </div>
           </div>
 
-          <div class="text-center pt-4">
-            <button type="submit" 
-                    class="px-6 py-3 bg-gradient-to-r from-brand-600 to-gold-600 text-white font-medium rounded-lg shadow-md hover:from-brand-700 hover:to-gold-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transform hover:scale-105 transition-all duration-300">
-              Predecir Fecha de Vencimiento
+          <div class="flex flex-wrap gap-3 mt-4">
+            <button id="btnFill" class="px-3 py-2 rounded-lg border border-white/20 hover:bg-white/60 dark:hover:bg-ink-700">
+              Usar ejemplo realista
+            </button>
+            <button id="btnExpiryPredict" class="px-4 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700">
+              Predecir vencimiento
             </button>
           </div>
-        </form>
 
-        <!-- Resultado de la predicción -->
-        <div id="predictionResult" class="mt-8 p-6 rounded-xl bg-gradient-to-r from-brand-50 to-gold-50 dark:from-ink-800 dark:to-ink-700 border border-brand-200 dark:border-ink-600 hidden">
-          <h3 class="text-xl font-bold text-brand-800 dark:text-gold-300 mb-2">Resultado de la Predicción</h3>
-          <div class="flex items-center justify-center">
-            <div class="text-center">
-              <p class="text-lg text-brand-700 dark:text-slate-300 mb-1">Fecha de vencimiento estimada:</p>
-              <p id="expirationDate" class="text-3xl font-bold text-brand-900 dark:text-gold-200"></p>
-            </div>
-          </div>
-          <div class="mt-4 text-sm text-brand-600 dark:text-slate-400">
-            <p>Esta predicción se basa en el modelo de Machine Learning de DinoAnalyticsML entrenado con datos históricos de producción.</p>
-          </div>
+          <div id="expiryResult" class="mt-3 text-sm"></div>
         </div>
+
+        <hr class="my-6 border-white/20">
+        <h3 class="text-lg font-semibold mb-2 text-brand-800 dark:text-gold-300">Importancias de variables</h3>
+        <div class="h-64"><canvas id="fiChart"></canvas></div>
       </div>
 
-      <!-- Explicación del modelo -->
-      <div class="mt-12 bg-brand-50 dark:bg-ink-800 rounded-2xl p-6 shadow-soft">
-        <h3 class="text-xl font-bold text-brand-800 dark:text-gold-300 mb-3">¿Cómo funciona nuestro modelo predictivo?</h3>
-        <p class="text-brand-700 dark:text-slate-300 mb-4">
-          Nuestro modelo de Machine Learning ha sido entrenado con datos históricos de todo el proceso productivo de DINOBREW. 
-          Analiza variables para predecir la fecha de vencimiento de cada lote de cerveza.
-        </p>
-        
+      <!-- Columna derecha: Estado y Entrenamiento -->
+      <div class="glass rounded-2xl p-6 border border-white/10">
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Estado del modelo</h2>
+        <div id="statusBox" class="text-sm space-y-1">
+          <div class="text-slate-500">Verificando...</div>
+        </div>
+        <div class="mt-2 text-sm" id="downloadLine"></div>
+
+        <hr class="my-6 border-white/20">
+        <h2 class="text-xl font-bold mb-3 text-brand-800 dark:text-gold-300">Entrenar/Reentrenar</h2>
+
         <div class="space-y-3">
-          <div class="flex items-start gap-3">
-            <div class="bg-brand-100 dark:bg-ink-700 rounded-full p-2 flex-shrink-0">
-              <i class="ti ti-chart-dots text-brand-700 dark:text-gold-400"></i>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">n_samples</label>
+              <input id="tr_n_samples" type="number" min="300" max="10000" value="1200"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
             </div>
             <div>
-              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Variables de entrada</h4>
-              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
-                El modelo considera fechas clave del proceso, tipo de cerveza, tiempos de fermentación y almacenamiento, temperatura y tipo de envase.
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-3">
-            <div class="bg-brand-100 dark:bg-ink-700 rounded-full p-2 flex-shrink-0">
-              <i class="ti ti-brain text-brand-700 dark:text-gold-400"></i>
+              <label class="block text-sm font-medium mb-1">n_estimators</label>
+              <input id="tr_n_estimators" type="number" min="50" max="2000" value="300"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
             </div>
             <div>
-              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Algoritmo de predicción</h4>
-              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
-                Utilizamos un algoritmo de regresión que identifica las variables de entrada y la durabilidad del producto.
-              </p>
-            </div>
-          </div>
-          
-          <div class="flex items-start gap-3">
-            <div class="bg-brand-100 dark:bg-ink-700 rounded-full p-2 flex-shrink-0">
-              <i class="ti ti-rocket text-brand-700 dark:text-gold-400"></i>
+              <label class="block text-sm font-medium mb-1">test_size</label>
+              <input id="tr_test_size" type="text" value="0.2"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800" placeholder="0.2">
             </div>
             <div>
-              <h4 class="font-semibold text-brand-900 dark:text-gold-200">Beneficios</h4>
-              <p class="text-brand-800/70 dark:text-gold-200/80 text-sm">
-                Reduce desperdicios, optimiza inventarios y garantiza que los consumidores reciban siempre un producto fresco y en óptimas condiciones.
-              </p>
+              <label class="block text-sm font-medium mb-1">random_state</label>
+              <input id="tr_random_state" type="number" value="42"
+                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-ink-800">
             </div>
           </div>
+
+          <button id="btnExpiryBootstrap"
+                  class="w-full px-4 py-2 rounded-lg bg-ink-900 text-white dark:bg-gold-600 dark:text-ink-900">
+            Entrenar ahora
+          </button>
+
+          <div id="expiryTrainMsg" class="text-sm mt-2"></div>
+          <pre id="expiryMetrics" class="text-xs mt-2 hidden rounded-lg p-3 bg-white/60 dark:bg-ink-800/60 border border-white/10"></pre>
         </div>
       </div>
     </div>
   </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  document.getElementById('predictionForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Obtener valores del formulario
-    const productionDate = new Date(document.getElementById('productionDate').value);
-    const beerType = document.getElementById('beerType').value;
-    const fermentationDays = parseInt(document.getElementById('fermentationDays').value);
-    const storageDays = parseInt(document.getElementById('storageDays').value);
-    const temperature = parseFloat(document.getElementById('temperature').value);
-    const packaging = document.getElementById('packaging').value;
-    
-    // Simular predicción - esto sería reemplazado por una llamada real al modelo
-    // Base: 90 días desde producción
-    let daysToAdd = 90;
-    
-    // Ajustar según tipo de cerveza
-    switch(beerType) {
-      case 'fresa':
-        daysToAdd += 5; // La fresa podría durar un poco más
-        break;
-      case 'mora':
-        daysToAdd += 3;
-        break;
-      case 'frutos_rojos':
-        daysToAdd += 7;
-        break;
-      case 'maracuya':
-        daysToAdd += 2;
-        break;
+(function(){
+  const statusBox = document.getElementById('statusBox');
+  const downloadLine = document.getElementById('downloadLine');
+  const expiryTrainMsg = document.getElementById('expiryTrainMsg');
+  const expiryMetrics = document.getElementById('expiryMetrics');
+  const btnBootstrap = document.getElementById('btnExpiryBootstrap');
+  const btnPredict = document.getElementById('btnExpiryPredict');
+  const btnFill = document.getElementById('btnFill');
+  const ctxFI = document.getElementById('fiChart');
+
+  let fiChart;
+
+  function showMsg(el, txt, ok=false){
+    el.textContent = txt;
+    el.className = ok ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300';
+  }
+
+  function drawFI(items){
+    if(!ctxFI) return;
+    const labels = items.map(x=>x.name);
+    const values = items.map(x=>x.importance);
+    if(fiChart){ fiChart.destroy(); }
+    fiChart = new Chart(ctxFI, {
+      type:'bar',
+      data:{ labels, datasets:[{label:'Importancia', data:values}] },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{ x:{ticks:{autoSkip:false, maxRotation:45,minRotation:0}} }
+      }
+    });
+  }
+
+  async function loadStatus(){
+    try{
+      const r = await fetch('{{ url_for("api_expiry_status") }}');
+      const data = await r.json();
+      if(!r.ok){ statusBox.innerHTML = '<div class="text-red-600">Error consultando estado.</div>'; return; }
+
+      const rows = [];
+      rows.push(`<div><strong>Modelo:</strong> ${data.exists ? 'Entrenado' : 'No entrenado'}</div>`);
+      if(data.exists && data.trained_at){
+        rows.push(`<div><strong>Entrenado en:</strong> ${data.trained_at}</div>`);
+      }
+      if(data.metrics){
+        const m = data.metrics;
+        rows.push(`<div><strong>MAE:</strong> ${m.MAE?.toFixed?.(2) ?? m.MAE}`);
+        rows.push(`<strong>RMSE:</strong> ${m.RMSE?.toFixed?.(2) ?? m.RMSE}`);
+        rows.push(`<strong>R²:</strong> ${(m.R2*100).toFixed(1)}%</div>`);
+      }
+      if(data.params){
+        rows.push(`<div class="text-xs text-slate-500">n_samples=${data.params.n_samples} · n_estimators=${data.params.n_estimators} · test_size=${data.params.test_size} · seed=${data.params.random_state}</div>`);
+      }
+      statusBox.innerHTML = rows.map(x=>`<div>${x}</div>`).join('');
+
+      if(data.download_url){
+        downloadLine.innerHTML = `<a class="underline text-brand-700 dark:text-gold-300" href="${data.download_url}">Descargar modelo</a>`;
+      } else {
+        downloadLine.innerHTML = '';
+      }
+
+      if(data.feature_importance && data.feature_importance.length){
+        drawFI(data.feature_importance);
+      } else {
+        drawFI([]);
+      }
+    }catch(e){
+      console.error(e);
+      statusBox.innerHTML = '<div class="text-red-600">No se pudo obtener el estado.</div>';
     }
-    
-    // Ajustar según tiempo de fermentación (más fermentación, más durabilidad)
-    daysToAdd += fermentationDays * 0.5;
-    
-    // Ajustar según temperatura (menor temperatura, mayor durabilidad)
-    daysToAdd += (15 - temperature) * 1.2;
-    
-    // Ajustar según tipo de envase
-    switch(packaging) {
-      case 'botella_vidrio':
-        daysToAdd += 5; // El vidrio protege mejor
-        break;
-      case 'lata':
-        daysToAdd += 3;
-        break;
-      case 'barril':
-        daysToAdd += 1; // Una vez abierto, dura menos
-        break;
+  }
+
+  // Entrenar DEMO con hiperparámetros
+  btnBootstrap.addEventListener('click', async ()=>{
+    const n_samples = parseInt(document.getElementById('tr_n_samples').value || '1200',10);
+    const n_estimators = parseInt(document.getElementById('tr_n_estimators').value || '300',10);
+    const test_size = parseFloat((document.getElementById('tr_test_size').value || '0.2').replace(',','.'));
+    const random_state = parseInt(document.getElementById('tr_random_state').value || '42',10);
+
+    showMsg(expiryTrainMsg, 'Entrenando modelo...');
+    try{
+      const res = await fetch('{{ url_for("api_expiry_bootstrap") }}', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ n_samples, n_estimators, test_size, random_state })
+      });
+      const data = await res.json();
+      if(!res.ok || data.error){
+        showMsg(expiryTrainMsg, data.error || 'Error entrenando.');
+        expiryMetrics.classList.add('hidden');
+        return;
+      }
+      expiryMetrics.textContent = JSON.stringify(data.metrics, null, 2);
+      expiryMetrics.classList.remove('hidden');
+      showMsg(expiryTrainMsg, data.note || 'Modelo entrenado.', true);
+
+      if(data.feature_importance){ drawFI(data.feature_importance); }
+      loadStatus();
+    }catch(e){
+      console.error(e);
+      showMsg(expiryTrainMsg, 'Fallo de red/servidor.');
     }
-    
-    // Calcular fecha de vencimiento
-    const expirationDate = new Date(productionDate);
-    expirationDate.setDate(expirationDate.getDate() + Math.round(daysToAdd));
-    
-    // Formatear fecha
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    const formattedDate = expirationDate.toLocaleDateString('es-ES', options);
-    
-    // Mostrar resultado
-    document.getElementById('expirationDate').textContent = formattedDate;
-    document.getElementById('predictionResult').classList.remove('hidden');
-    
-    // Scroll al resultado
-    document.getElementById('predictionResult').scrollIntoView({ behavior: 'smooth' });
   });
+
+  // Predicción manual
+  btnPredict.addEventListener('click', async ()=>{
+    const payload = {
+      packaging_date: (document.getElementById('pk_date').value || new Date().toISOString().slice(0,10)),
+      fermentation_days: parseInt(document.getElementById('ferment').value || '14', 10),
+      storage_temp_c: parseFloat(document.getElementById('temp').value || '6.0'),
+      pasteurized: document.getElementById('pasteur').checked ? 1 : 0,
+      fruit_type: document.getElementById('fruit').value,
+      bottle_type: document.getElementById('bottle').value,
+      ph_final: parseFloat(document.getElementById('ph').value || '4.0'),
+      distribution_days: parseInt(document.getElementById('dist').value || '3', 10),
+      initial_gravity: parseFloat(document.getElementById('og').value || '1.040'),
+      final_gravity: parseFloat(document.getElementById('fg').value || '1.010')
+    };
+
+    const box = document.getElementById('expiryResult');
+    box.textContent = 'Calculando...'; box.className = 'text-slate-600';
+
+    try{
+      const res = await fetch('{{ url_for("api_expiry_predict") }}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(!res.ok || data.error){
+        box.textContent = data.error || 'No se pudo predecir.';
+        box.className = 'text-red-700 dark:text-red-300';
+        return;
+      }
+      box.innerHTML = `
+        <div class="rounded-lg p-3 border border-white/10 bg-white/70 dark:bg-ink-800/60">
+          <div><strong>Vida útil estimada:</strong> ${data.shelf_life_days} días</div>
+          <div><strong>Fecha de vencimiento:</strong> ${data.expiry_date}</div>
+          <div class="text-xs text-slate-500 mt-1">${data.note || ''}</div>
+        </div>`;
+      box.className = 'text-green-700 dark:text-green-300';
+    }catch(e){
+      console.error(e);
+      box.textContent = 'Error de red/servidor.';
+      box.className = 'text-red-700 dark:text-red-300';
+    }
+  });
+
+  // Rellenar ejemplo
+  btnFill.addEventListener('click', ()=>{
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('pk_date').value = today;
+    document.getElementById('ferment').value = 14;
+    document.getElementById('temp').value = 6.0;
+    document.getElementById('pasteur').checked = true;
+    document.getElementById('fruit').value = 'fresa';
+    document.getElementById('bottle').value = 'vidrio_500';
+    document.getElementById('ph').value = 4.1;
+    document.getElementById('dist').value = 2;
+    document.getElementById('og').value = 1.042;
+    document.getElementById('fg').value = 1.012;
+  });
+
+  // Carga inicial
+  loadStatus();
+})();
 </script>
 {% endblock %}
