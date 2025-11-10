@@ -1,6 +1,6 @@
 {
   "trained": true,
-  "trained_at": "2025-11-05 19:20:22",
+  "trained_at": "2025-11-09 20:23:52",
   "algorithm": "RandomForestRegressor",
   "params": {
     "n_estimators": 300,
@@ -27,5 +27,5 @@
   ],
   "target": "shelf_life_days",
   "model_relpath": "uploads/models/expiry_model.joblib",
-  "model_size_bytes": 22791267
+  "model_size_bytes": 22791075
 }
