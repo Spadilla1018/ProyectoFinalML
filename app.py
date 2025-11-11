@@ -1446,6 +1446,20 @@ def api_expiry_predict():
     return jsonify(expiry_heuristic(payload))
 
 
+
+# ----------------------------------
+# Modelo Predict
+# ----------------------------------
+
+
+
+
+
+
+# ----------------------------------
+
+
+
 # ----------------------------------
 # Páginas públicas (Producto + PDFs + Nosotros)
 # ----------------------------------
@@ -1872,9 +1886,19 @@ if not os.path.exists(EXPIRY_MODEL_PATH) and os.getenv("EXPIRY_AUTO_BOOTSTRAP", 
     except Exception as e:
         app.logger.error(f"[BOOTSTRAP] No se pudo entrenar el modelo demo: {e}")
 
+# ----------------------------------
+# Conectar ml_routes.py a la app Flask
+# ----------------------------------
+
+from ml_routes import ml_bp
+app.register_blueprint(ml_bp)
+
 
 # ----------------------------------
 # Run (local)
 # ----------------------------------
 if __name__ == "__main__":
     app.run(debug=True, port=int(os.getenv("PORT", "5000")))
+
+
+
