@@ -237,6 +237,7 @@
             <div class="card-body p-4 p-md-5">
                 <form method="POST">
                     <div class="feature-grid">
+                        {% set vals = inputs or [] %}
                         {% for feature in features %}
                         <div class="feature-item">
                             <label class="form-label">{{ feature }}</label>
@@ -247,6 +248,7 @@
                                 class="form-control"
                                 required 
                                 placeholder="Ej: 7.5"
+                                value="{{ vals[loop.index0] if loop.index0 < vals|length else '' }}"
                             >
                         </div>
                         {% endfor %}
@@ -259,20 +261,143 @@
                     </div>
                 </form>
 
-                {% if prediction %}
+                {# RESULTADO Y GRÁFICA #}
+                {% if prediction is not none %}
+                
+                <!-- Tarjeta de resultado numérico -->
                 <div class="result-card text-center">
                     <h4 class="fw-bold mb-3">
                         <i class="fas fa-check-circle beer-icon"></i> Resultado de la Predicción
                     </h4>
-                    <p class="fs-5 mb-0">
+                    <p class="fs-5 mb-3">
                         Calificación estimada (<strong class="gold-text">review_overall</strong>): 
-                        <span class="prediction-value">{{ prediction }}</span>
+                        <span class="prediction-value">
+                            {{ "%.2f"|format(prediction) }} / 5
+                        </span>
+                    </p>
+
+                    <div class="mt-4">
+                        <h5 class="fw-bold mb-3">
+                            <i class="fas fa-chart-bar beer-icon"></i> Escala 1 – 5
+                        </h5>
+                        <canvas id="predictionChart" height="140"></canvas>
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- Mensaje inicial cuando no hay predicción -->
+                <div class="result-card text-center">
+                    <h4 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle beer-icon"></i> Predicción pendiente
+                    </h4>
+                    <p class="fs-5 mb-0">
+                        Por favor ingresa los datos de la cerveza y haz clic en 
+                        <strong class="gold-text">"Predecir Calificación"</strong> para ver el resultado
+                        y la gráfica en escala de <strong>1 a 5</strong>.
                     </p>
                 </div>
                 {% endif %}
+                {# FIN RESULTADO / GRÁFICA #}
+
+                <!-- 🔽🔽 NUEVA SECCIÓN: GRÁFICAS DEL ENTRENAMIENTO 🔽🔽 -->
+                <hr class="my-5" style="border-color: #444;">
+
+                <div class="mt-4">
+                    <h4 class="fw-bold mb-3 text-center">
+                        <i class="fas fa-chart-line beer-icon"></i> Análisis del modelo (entrenamiento offline)
+                    </h4>
+                    <p class="text-center mb-4 opacity-75">
+                        Estas gráficas fueron generadas durante el entrenamiento del modelo con el dataset de cervezas.
+                    </p>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="result-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-layer-group beer-icon"></i> Importancia de características
+                                </h5>
+                                <img 
+                                    src="{{ url_for('static', filename='img/beer_feature_importance.png') }}" 
+                                    alt="Importancia de características del modelo"
+                                    class="img-fluid rounded shadow-lg"
+                                >
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-card">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-bullseye beer-icon"></i> Predicciones vs valores reales
+                                </h5>
+                                <img 
+                                    src="{{ url_for('static', filename='img/beer_pred_vs_real.png') }}" 
+                                    alt="Predicciones vs valores reales del modelo"
+                                    class="img-fluid rounded shadow-lg"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 🔼🔼 FIN NUEVA SECCIÓN 🔼🔼 -->
             </div>
         </div>
     </div>
 </div>
+
+{# SCRIPTS DE GRÁFICA SOLO SI HAY PREDICCIÓN #}
+{% if prediction is not none %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('predictionChart');
+    if (!ctx) return;
+
+    // Valor numérico de la predicción (inyectado desde Flask/Jinja)
+    const predValue = {{ prediction|tojson }};
+    const maxScale = 5;  // Escala superior
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Calificación'],
+            datasets: [{
+                label: 'Calificación estimada',
+                data: [predValue],
+                backgroundColor: 'rgba(212, 175, 55, 0.7)',
+                borderColor: '#d4af37',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const v = context.parsed.y;
+                            return 'Calificación: ' + v.toFixed(2) + ' / 5';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: 1,
+                    max: maxScale,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    title: {
+                        display: true,
+                        text: 'Escala 1 – 5'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
 
 {% endblock %}

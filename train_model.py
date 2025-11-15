@@ -1,4 +1,5 @@
 # --- train_model.py --- 
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -6,9 +7,17 @@ from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.pyplot as plt
-import seaborn as sns
 import joblib
-import numpy as np  # 👈 agregado para calcular RMSE manualmente
+import numpy as np  # para RMSE y ordenamientos
+
+# --- RUTAS PARA GUARDAR GRÁFICAS EN static/img ---
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+IMG_DIR = os.path.join(STATIC_DIR, "img")
+os.makedirs(IMG_DIR, exist_ok=True)
+
+FEATURE_IMPORTANCE_PATH = os.path.join(IMG_DIR, "beer_feature_importance.png")
+PRED_VS_REAL_PATH = os.path.join(IMG_DIR, "beer_pred_vs_real.png")
 
 # --- Paso 1: Cargar el dataset ---
 df = pd.read_csv('data/beer_profile_and_ratings.csv')
@@ -46,7 +55,9 @@ print("\nColumna objetivo:", target)
 # --- Paso 4: Dividir los datos ---
 X = df[features]
 y = df[target]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 print("\nTamaño de los conjuntos:")
 print("Entrenamiento:", X_train.shape)
@@ -74,7 +85,6 @@ y_pred_xgb = xgb_model.predict(X_test)
 
 print("\n--- Evaluación del Modelo ---")
 
-# ✅ Bloque corregido
 # Random Forest
 rmse_rf = np.sqrt(mean_squared_error(y_test, y_pred_rf))
 r2_rf = r2_score(y_test, y_pred_rf)
@@ -89,27 +99,40 @@ print("\nXGBoost:")
 print(f"RMSE: {rmse_xgb:.4f}")
 print(f"R²: {r2_xgb:.4f}")
 
-# --- Paso 8: Importancia de características ---
+# --- Paso 8: Importancia de características (GUARDAR GRÁFICA) ---
 importances = rf_model.feature_importances_
-indices = importances.argsort()[::-1]
+indices = np.argsort(importances)[::-1]  # de mayor a menor
+sorted_features = [features[i] for i in indices]
+sorted_importances = importances[indices]
+
 plt.figure(figsize=(12, 6))
-sns.barplot(x=importances[indices], y=[features[i] for i in indices], palette="viridis")
-plt.title("Importancia de Características (Random Forest)")
+plt.barh(range(len(sorted_features)), sorted_importances)
+plt.yticks(range(len(sorted_features)), sorted_features)
+plt.gca().invert_yaxis()  # para que la más importante quede arriba
+plt.title("Importancia de características (Random Forest)")
 plt.xlabel("Importancia")
 plt.ylabel("Características")
 plt.tight_layout()
+
+plt.savefig(FEATURE_IMPORTANCE_PATH, dpi=120, bbox_inches="tight")
+print(f"\nGráfico de importancia de características guardado en: {FEATURE_IMPORTANCE_PATH}")
 plt.show()
+plt.close()
 
 # --- Paso 9: Guardar el modelo y el escalador ---
 joblib.dump(xgb_model, 'beer_rating_predictor.pkl')
 joblib.dump(scaler, 'scaler.pkl')
 print("\nModelo y escalador guardados correctamente ✅")
 
-# --- Paso 10: Visualizar predicciones ---
+# --- Paso 10: Visualizar y GUARDAR predicciones ---
 plt.figure(figsize=(8, 6))
-plt.scatter(y_test, y_pred_xgb, alpha=0.6, color='teal')
-plt.xlabel("Valor Real (review_overall)")
-plt.ylabel("Predicción del Modelo")
-plt.title("Predicciones vs Valores Reales (XGBoost)")
+plt.scatter(y_test, y_pred_xgb, alpha=0.6)
+plt.xlabel("Valor real (review_overall)")
+plt.ylabel("Predicción del modelo")
+plt.title("Predicciones vs valores reales (XGBoost)")
 plt.grid(True)
+
+plt.savefig(PRED_VS_REAL_PATH, dpi=120, bbox_inches="tight")
+print(f"Gráfico de predicciones vs valores reales guardado en: {PRED_VS_REAL_PATH}")
 plt.show()
+plt.close()

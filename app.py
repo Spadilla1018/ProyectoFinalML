@@ -55,6 +55,9 @@ from sklearn.metrics import (
 )
 import joblib
 
+from collections import deque
+from predict import FEATURES as BEER_FEATURES, predict_beer_rating
+
 # ---- .env
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
@@ -73,6 +76,19 @@ IMG_DIR = os.path.join(STATIC_DIR, "img")
 MODELS_DIR = os.path.join(UPLOAD_DIR, "models")
 EXPIRY_MODEL_PATH = os.path.join(MODELS_DIR, "expiry_model.joblib")
 EXPIRY_META_PATH  = os.path.join(MODELS_DIR, "expiry_meta.json")  # <<< NUEVO
+
+# --- Modelo de predicción de calificación de cerveza (beer rating) ---
+BEER_MODEL_PATH = os.path.join(BASE_DIR, "beer_rating_predictor.pkl")
+BEER_SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
+
+BEER_FEATURES = [
+    "ABV", "Min IBU", "Max IBU", "Astringency", "Body",
+    "Alcohol", "Bitter", "Sweet", "Sour", "Salty",
+    "Fruits", "Hoppy", "Spices", "Malty"
+]
+
+# Historial en memoria de predicciones (para las últimas 5)
+PREDICTION_HISTORY = []
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv("SECRET_KEY", "dev-change-me")
@@ -378,6 +394,7 @@ def build_pipeline(task: str, algorithm: str, X: pd.DataFrame):
 CURRENT_DF = None
 CURRENT_FILENAME = None
 
+
 def generate_demo_dataframe(n=400, seed=123):
     rng = np.random.default_rng(seed)
     edades = rng.integers(18, 65, size=n)
@@ -399,12 +416,14 @@ def generate_demo_dataframe(n=400, seed=123):
     })
     return df
 
+
 def _init_demo_df():
     """Carga dataset DEMO en memoria (sin CSV)."""
     global CURRENT_DF, CURRENT_FILENAME
     if CURRENT_DF is None:
         CURRENT_DF = generate_demo_dataframe()
         CURRENT_FILENAME = "DEMO_DinoBrew.csv"
+
 
 _init_demo_df()
 
@@ -609,20 +628,84 @@ def index():
         )
 
 
-# ---------- Página de Analytics (sin CSV) ----------
-@app.get("/analytics")
+# ---------- Página de Analytics: predicción de calificación de cerveza ----------
+@app.route("/analytics", methods=["GET", "POST"])
 @login_required
 def analytics():
-    _init_demo_df()
-    cols = CURRENT_DF.columns.tolist() if CURRENT_DF is not None else []
-    row_count = int(CURRENT_DF.shape[0]) if CURRENT_DF is not None else 0
+    from datetime import datetime
+    global PREDICTION_HISTORY
+
+    # Valores por defecto para evitar errores de variables indefinidas
+    prediction = None
+    input_values = []
+    last_5_labels = []
+    last_5_values = []
+
+    # Siempre pasamos la lista de features al template
+    features = BEER_FEATURES
+
+    if request.method == "POST":
+        try:
+            # 1. Leer valores del formulario en el orden de BEER_FEATURES
+            values = []
+            for f in BEER_FEATURES:
+                raw = request.form.get(f, "").strip()
+                if raw == "":
+                    raise ValueError(f"Falta el valor para la característica '{f}'")
+                values.append(float(raw))
+
+            input_values = values
+
+            # 2. Construir DataFrame como en predict.py
+            new_data = pd.DataFrame([dict(zip(BEER_FEATURES, values))])
+
+            # 3. Cargar modelo y escalador
+            if not os.path.exists(BEER_MODEL_PATH) or not os.path.exists(BEER_SCALER_PATH):
+                flash(
+                    "No se encontraron 'beer_rating_predictor.pkl' y/o 'scaler.pkl'. "
+                    "Colócalos en la raíz del proyecto (junto a app.py).",
+                    "danger"
+                )
+            else:
+                model = joblib.load(BEER_MODEL_PATH)
+                scaler = joblib.load(BEER_SCALER_PATH)
+
+                # 4. Escalar y predecir
+                X_new_scaled = scaler.transform(new_data[BEER_FEATURES])
+                y_pred = model.predict(X_new_scaled)
+                prediction = float(y_pred[0])
+
+                # 5. Guardar en historial (para las últimas 5)
+                PREDICTION_HISTORY.append({
+                    "ts": datetime.now().strftime("%H:%M:%S"),
+                    "value": prediction,
+                })
+                # Mantener sólo las últimas 20 por si acaso
+                if len(PREDICTION_HISTORY) > 20:
+                    PREDICTION_HISTORY = PREDICTION_HISTORY[-20:]
+
+        except Exception as e:
+            app.logger.exception("Error al hacer la predicción de calificación de cerveza")
+            flash(f"Error al realizar la predicción: {e}", "danger")
+
+    # 6. Preparar datos para la gráfica de últimas 5 consultas
+    if PREDICTION_HISTORY:
+        last = PREDICTION_HISTORY[-5:]
+        # Etiquetas simples: #1, #2, ..., #n o podrías usar los timestamps
+        last_5_labels = [f"#{i+1}" for i in range(len(last))]
+        last_5_values = [round(item["value"], 2) for item in last]
+
     return render_template(
         "analytics.html",
         title="DinoAnalyticsML",
-        columns=cols,
-        filename=CURRENT_FILENAME,
-        row_count=row_count
+        features=features,
+        prediction=prediction,
+        input_values=input_values if input_values else None,
+        last_5_labels=last_5_labels,
+        last_5_values=last_5_values,
     )
+
+
 
 
 # ---------- APIs de análisis exploratorio ----------
@@ -1446,18 +1529,55 @@ def api_expiry_predict():
     return jsonify(expiry_heuristic(payload))
 
 
-
 # ----------------------------------
-# Modelo Predict
-# ----------------------------------
-
-
-
-
-
-
+# Modelo Predict: predicción de calificación de cerveza
 # ----------------------------------
 
+BEER_LAST_PREDICTIONS = deque(maxlen=5)
+
+
+@app.route("/beer_predict", methods=["GET", "POST"])
+@login_required
+def beer_predict():
+    """
+    Página para predecir la calificación (review_overall) de una cerveza
+    usando el modelo entrenado en beer_rating_predictor.pkl.
+    También expone datos para las gráficas (últimas 5 consultas, etc.).
+    """
+    prediction = None
+    input_values = []
+
+    if request.method == "POST":
+        # Leer valores del formulario en el mismo orden que BEER_FEATURES
+        input_values = []
+        for feat in BEER_FEATURES:
+            raw = request.form.get(feat, "").strip()
+            try:
+                value = float(raw)
+            except ValueError:
+                value = 0.0
+            input_values.append(value)
+
+        try:
+            prediction = round(predict_beer_rating(input_values), 2)
+            BEER_LAST_PREDICTIONS.append(prediction)
+        except Exception as e:
+            app.logger.error(f"Error al predecir calificación de cerveza: {e}")
+            prediction = None
+
+    # Construir datos para las últimas 5 predicciones
+    last_5_values = list(BEER_LAST_PREDICTIONS)
+    last_5_labels = [f"# {i+1}" for i in range(len(last_5_values))]
+
+    return render_template(
+        "beer_predict.html",  # asegúrate de que este template exista
+        title="Predicción de Calificación de Cerveza",
+        features=BEER_FEATURES,
+        prediction=prediction,
+        input_values=input_values,
+        last_5_labels=last_5_labels,
+        last_5_values=last_5_values,
+    )
 
 
 # ----------------------------------
@@ -1899,6 +2019,3 @@ app.register_blueprint(ml_bp)
 # ----------------------------------
 if __name__ == "__main__":
     app.run(debug=True, port=int(os.getenv("PORT", "5000")))
-
-
-
