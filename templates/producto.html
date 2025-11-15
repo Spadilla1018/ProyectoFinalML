@@ -234,11 +234,11 @@
     <!-- Galería adicional -->
     <div class="mb-10">
       <h2 class="text-2xl font-bold text-brand-700 dark:text-gold-300 mb-6 flex items-center gap-3">
-        <i class="ti ti-photo text-2xl"></i> Galería de Producto
+        <i class="ti ti-photo text-2xl"></i> Galería de Producto 
       </h2>
 
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {% for img in ['img/ddd.jpg', 'img/logo.jpg', 'img/2fresas.jpg', 'img/moras.jpg', 'img/beer_hero.jpg'] %}
+        {% for img in ['img/ddd.jpg', 'img/logo.jpg', 'img/2fresas.jpg', 'img/moras.jpg', 'img/beer_hero.jpg', 'img/cerveza.jpg', 'img/cervexa2.jpg', 'img/cerveza3.jpg', 'img/cerveza4.jpg'] %}
         <div class="relative overflow-hidden rounded-2xl shadow-soft hover:shadow-gold transition-all duration-500 group bg-white dark:bg-ink-800">
           <div class="relative flex items-center justify-center bg-black dark:bg-ink-900 h-48 md:h-56">
             <img src="{{ url_for('static', filename=img) }}"
